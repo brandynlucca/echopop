@@ -17,6 +17,12 @@ import pytest
         # when `range_output == False` and with `d_longitude`/`d_latitude` input
         (False, True),
     ],
+    ids=[
+        "range_True_latlon_False",
+        "range_False_latlon_False",
+        "range_True_latlon_True",
+        "range_False_latlon_True",
+    ]
 )
 def test_transform_geometry(range_output, d_latlon):
 
