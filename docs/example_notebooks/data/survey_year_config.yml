@@ -1,0 +1,66 @@
+# This YAML file is a configuration file specifying
+# input filenames & some process parameter settings.
+# Relative file paths defined below are concatenated
+# with the data_root_dir path also set below.
+
+---
+##############################################################################
+# Parameters
+
+survey_year: 2024            
+species:
+  text_code: kraken    
+  number_code: 999999        
+CAN_haul_offset: 0
+
+##############################################################################
+# Directory path that contains all input data needed
+
+data_root_dir: ${PKG_PATH}
+
+##############################################################################
+# Input data files
+
+biological:
+  length:
+    US:
+      filename: biodata_length.xlsx
+      sheetname: biodata_length
+  specimen:
+    US:
+      filename: biodata_specimen.xlsx
+      sheetname: biodata_specimen
+  catch:
+    US:
+      filename: biodata_catch.xlsx
+      sheetname: biodata_catch
+  haul_to_transect:
+    US:
+      filename: haul_to_transect_mapping.xlsx
+      sheetname: Sheet1
+stratification:
+  strata:
+    filename: strata.xlsx
+    sheetname: Base KS
+  geo_strata:
+    # The two stratification types are found in two sheets: "stratification1" and "INPFC"
+    filename: geographic_strata.xlsx
+    sheetname: [INPFC , stratification1]
+NASC:
+  # NASC values
+  no_age1:
+    filename: NASC_table_the_deep.xlsx
+    sheetname: Sheet1
+kriging:
+  mesh:
+    filename: kriging_mesh.xlsx
+    sheetname: mesh_grid
+  isobath_200m:
+    # filename: Kriging_files/Kriging_grid_files/Smoothing_EasyKrig.xlsx
+    filename: isobath.xlsx
+    sheetname: isobath_smoothing
+  vario_krig_para:
+    # NOTE: This file is not currently used
+    filename: default_vario_krig_settings.xlsx
+    sheetname: Sheet1
+...

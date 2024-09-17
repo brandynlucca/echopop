@@ -42,19 +42,19 @@ CONFIG_DATA_MODEL = {
     "biological": {
         "length": {
             "US": {"filename": str, "sheetname": str},
-            "CAN": {"filename": str, "sheetname": str},
+            # "CAN": {"filename": str, "sheetname": str},
         },
         "specimen": {
             "US": {"filename": str, "sheetname": str},
-            "CAN": {"filename": str, "sheetname": str},
+            # "CAN": {"filename": str, "sheetname": str},
         },
         "catch": {
             "US": {"filename": str, "sheetname": str},
-            "CAN": {"filename": str, "sheetname": str},
+            # "CAN": {"filename": str, "sheetname": str},
         },
         "haul_to_transect": {
             "US": {"filename": str, "sheetname": str},
-            "CAN": {"filename": str, "sheetname": str},
+            # "CAN": {"filename": str, "sheetname": str},
         },
     },
     "stratification": {
@@ -63,7 +63,7 @@ CONFIG_DATA_MODEL = {
     },
     "NASC": {
         "no_age1": {"filename": str, "sheetname": str},
-        "all_ages": {"filename": str, "sheetname": str},
+        # "all_ages": {"filename": str, "sheetname": str},
     },
     "kriging": {
         "mesh": {"filename": str, "sheetname": str},
