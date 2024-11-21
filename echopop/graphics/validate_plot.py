@@ -3,7 +3,7 @@ from typing import Any, Dict, Literal, Optional
 
 import cartopy.feature as cfeature
 from cartopy.crs import PlateCarree, Projection
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, SerializeAsAny
 
 
 class BasePlotModel(BaseModel):
@@ -159,7 +159,9 @@ class SpatialPlot(PlotModel):
     Base Pydantic model for spatial plots
     """
 
-    geo_config: GeoConfigPlot = Field(default_factory=lambda: GeoConfigPlot.create())
+    geo_config: SerializeAsAny[GeoConfigPlot] = Field(
+        default_factory=lambda: GeoConfigPlot.create()
+    )
     model_config = ConfigDict(extra="allow")
 
 
