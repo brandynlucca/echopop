@@ -1094,11 +1094,10 @@ class Survey:
         if plot_info["type"] == "spatial":
             # ---- Get the geospatial configuration
             geo_config = self.config["geospatial"].copy()
-            # ---- Get the coastline, if it exists, from `plot_parameters`
-            if parameters.get("geo_config"):
-                geo_config.update(parameters.get("geo_config", None))
+            # ---- Create copy of user-defined geospatial configuration
+            geo_param = parameters["geo_config"].copy()
             # ---- Update the parameterization
-            parameters.update(dict(geo_config=geo_config))
+            parameters["geo_config"].update({**geo_config, **geo_param})
 
         # Add the primary arguments into the dictionary
         parameters.update(dict(kind=kind, plot_type=plot_type, variable=variable))
