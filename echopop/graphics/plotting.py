@@ -416,28 +416,38 @@ def plot_mesh(
         vmax = kwargs.get("vmax", 10 ** np.round(np.log10(z.max())))
 
     # Get vmin
-    vmin = kwargs.get("vmin", 0.0)
+    vmin = kwargs.pop("vmin") if "vmin" in kwargs else 0.0
 
     # Prepare default parameters
     # ---- x
-    kwargs.update(dict(xlabel=kwargs.get("xlabel", "Longitude (\u00B0E)")))
+    xlabel = kwargs.pop("xlabel") if "xlabel" in kwargs else "Longitude (\u00B0E)"
     # ---- y
-    kwargs.update(dict(ylabel=kwargs.get("ylabel", "Latitude (\u00B0N)")))
+    ylabel = kwargs.pop("ylabel") if "ylabel" in kwargs else "Latitude (\u00B0N)"
 
     # Initialize figure
     # ---- Update the 'figsize' if it doesn't yet exist
-    if not kwargs.get("figsize", None):
-        kwargs.update(dict(figsize=kwargs.get("figsize", apply_aspect_ratio(5.5, axis_limits))))
+    fig_size = kwargs.pop("figsize") if "figsize" in kwargs else apply_aspect_ratio(5.5, axis_limits)
+    # ---- Prune the kwargs
+    figure_pruned = {k: kwargs.pop(k) for k in prune_args(plt.figure, **kwargs)}
     # ---- Prepare figure
-    plt.figure(**prune_args(plt.figure, **kwargs))
+    plt.figure(**{**{"figsize": fig_size}, **figure_pruned})
+    
+    # Initialize GeoAxes
+    # ---- Prune the kwargs
+    geoaxes_pruned = {k: kwargs.pop(k) for k in prune_args(plt.axes, **kwargs)}
     # ---- Define GeoAxes
-    ax = plt.axes(projection=geo_config["plot_projection"], **prune_args(plt.axes, **kwargs))
-    # ---- Add coastline
+    ax = plt.axes(projection=geo_config["plot_projection"], 
+                **geoaxes_pruned)
+    
+    # Add coastline
     ax.add_feature(geo_config["coastline"])
-    # ---- Normalize the colormapping
+    
+    # Normalize the colormapping
     colormap_norm = add_colorbar(
         ax, **dict(kwargs, cmap=cmap, colorbar_label=colorbar_label, vmin=vmin, vmax=vmax)
     )
+    
+    # Plot
     # ---- Scatter
     if plot_type == "scatter":
         ax.scatter(
@@ -474,7 +484,7 @@ def plot_mesh(
         grid_z.plot.pcolormesh(norm=colormap_norm, cmap=cmap, add_colorbar=False)
     # ---- Format the figure area axes
     format_axes(
-        ax, axis_limits=axis_limits, xlabel=kwargs.get("xlabel"), ylabel=kwargs.get("ylabel")
+        ax, axis_limits=axis_limits, xlabel=xlabel, ylabel=ylabel
     )
     # ---- Tighten the layout and display
     plt.tight_layout()

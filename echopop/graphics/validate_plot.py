@@ -1,9 +1,11 @@
 import re
-from typing import Any, Dict, Literal, Optional
+from typing import Any, Callable, Dict, Literal, Optional
+import numpy as np
+import pandas as pd
 
 import cartopy.feature as cfeature
 from cartopy.crs import PlateCarree, Projection
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, SerializeAsAny
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, SerializeAsAny, model_validator
 
 
 class BasePlotModel(BaseModel):
@@ -191,6 +193,191 @@ class TransectPlot(SpatialPlot):
         else:
             return v
 
+class BaseVarRef(BaseModel):
+    vmin: float = Field(default=0.0, description="Minimum value for the colormap.")
+    model_config = ConfigDict(extra="allow")   
+    
+    # Validator method
+    @classmethod
+    def judge(cls, **kwargs):
+        """
+        Validator method
+        """
+        try:
+            return cls(**kwargs)
+        except ValidationError as e:
+            e.__traceback__ = None
+            raise e
+
+class AbundanceVar(BaseVarRef, arbitrary_types_allowed=True):
+    dataset: pd.DataFrame
+    cmap: str = Field(default="viridis")
+    variable: str
+    vmax: float = Field(default_factory=AbundanceVar.vmax_gen())
+    model_config = ConfigDict(extra="allow")
+        
+    @model_validator(mode="before")
+    @classmethod
+    def validate_vmax(cls, values):
+        
+        # Set `vmax` after `dataset` and `variable` are initialized
+        if not values.get("vmax", None):
+            # ---- Get the dataset column
+            
+            values["vmax"] = values["dataset"][values["variable"]].max()
+        
+        return values
+    
+    @classmethod
+    def vmax_gen(cls, v):
+        
+        z = (v["dataset"][v["variable"]])
+        return 10 ** np.round(np.log10(z.max()))
+
+      
+
+class BiomassVar(BaseVarRef):
+    cmap: str = Field(default="inferno")
+    vmin: float = Field(default=0.0, description="Minimum value for the colormap.")
+    model_config = ConfigDict(extra="allow")
+
+class BiomassDensityVar(BaseVarRef):
+    cmap: str = Field(default="plasma")
+    
+    model_config = ConfigDict(extra="allow")
+
+class NASCVar(BaseVarRef):
+    cmap: str = Field(default="cividis")
+    vmin: float = Field(default=0.0, description="Minimum value for the colormap.")
+    model_config = ConfigDict(extra="allow")
+
+class ReferenceParams(BaseVarRef):
+    cmap: Optional[str] = Field(default=None, description="Colormap name.")
+    vmax: Optional[float] = Field(default=None, description="Maximum value for the colormap.")    
+    model_config = ConfigDict(extra="allow")
+
+    # Factory method
+    @classmethod
+    def create(cls, **kwargs):
+        """
+        Factory creation method
+        """
+
+        # Scrutinize `kind`
+        cls.judge(**kwargs)
+
+        # Find the correct sub-class plotting model
+        return (
+            cls._REFERENCE_VAR_FACTORY(kwargs["variable"])
+            .judge(**kwargs).model_dump(exclude_none=False)
+        )
+
+    @classmethod
+    def _REFERENCE_VAR_FACTORY(cls, variable: str):
+        
+        if "abundance" in variable:
+            return AbundanceVar
+        elif "biomass_density" in variable:
+            return BiomassDensityVar
+        elif "biomass" in variable:
+            return BiomassVar
+        elif "nasc" in variable:
+            return NASCVar
+        else:
+            return None
+        
+        
+    
+class ReferenceParams(BaseModel):
+    cmap: Optional[str] = Field(default=None, description="Colormap name.")
+    colorbar_label: Optional[str] = Field(default=None, description="Colorbar label.")
+    vmax: Optional[float] = Field(default=None, description="Upper limit of the color scale.")
+    vmin: Optional[float] = Field(default=None, description="Lower limit of the color scale.")
+    model_config = ConfigDict(extra="allow")
+    
+    @model_validator(mode="before")
+    @classmethod
+    def reference_kwargs(cls, values):
+        """
+        Assign additional kwargs based on the plot type
+        """
+        
+        # Determine if variable is sexed
+        if "_male" in values["variable"]:
+            label_prepend = "Male "
+        elif "_female" in values["variable"]:
+            label_prepend = "Female "
+        else:
+            label_prepend = ""
+
+        # Set variable if missing
+        # ---- Abundance
+        if "abundance" in values["variable"]:
+            values["cmap"] = values.get("cmap", "viridis")
+        # ---- Kriged biomass
+        elif "kriged_biomass_density" in values["variable"]:
+            values["cmap"] = values.get("cmap", )
+        # ---- Kriged biomass density
+        # ---- Biomass density
+        elif "biomass_density" in values["variable"]:
+            values["cmap"] = values.get("cmap", "plasma")
+        # ---- Biomass
+        elif "biomass" in values["variable"]:            
+            values["cmap"] = values.get("cmap", "inferno")
+        # ---- Kriged biomass
+        # ---- Kriged biomass density
+        # ---- Kriged CV
+        
+        # ---- Biomass density
+        elif "nasc" in values["variable"]:
+            values["cmap"] = values.get("cmap", "cividis")  
+        # ---- Number density
+        elif "number_density" in values["variable"]:   
+            values["cmap"] = values.get("cmap", "magma")                 
+        # Return values
+        return values
+        
+    # Factory method    
+    @classmethod
+    def create(cls, **kwargs):
+        """
+        Factory creation method
+        """
+
+        return cls(**kwargs).model_dump(exclude_none=False)
+    
+class HexbinPlot(ReferenceParams):
+    reduce_C_function: Optional[Callable] = Field(
+        default=None, 
+        description="Function to use for reducing the C-dimension."
+    )
+    model_config = ConfigDict(extra="allow")
+
+    @model_validator(mode="before")
+    @classmethod
+    def reference_kwargs(cls, values):
+        """
+        Assign additional kwargs based on the plot type
+        """
+
+        # Set variable if missing
+        input = values.get("reduce_C_function", None)
+        # ---- Assign if missing
+        if input is None:
+            # ---- Biomass
+            if values["variable"] == "biomass":            
+                values["reduce_C_function"] = np.sum
+            # ---- All other variables
+            else:
+                values["reduce_C_function"] = np.mean
+                
+        # Return values
+        return values
+
+
+    
+           
+
 
 class MeshPlot(SpatialPlot):
 
@@ -205,6 +392,20 @@ class MeshPlot(SpatialPlot):
             return "hexbin"
         else:
             return v
+        
+    @model_validator(mode="after")
+    def reference_kwargs(self):        
+        """
+        Assign additional kwargs based on the plot type
+        """
+        
+        # Biomass
+        if self.variable == "biomass":
+            # ---- Generics
+            self.cmap = "plasma"
+            self.colorbar_label = "Kriged biomass\n$\\mathregular{kg}$"
+            
+
 
 
 class BiologicalHeatmapPlot(PlotModel):
