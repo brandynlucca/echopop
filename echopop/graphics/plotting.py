@@ -1,5 +1,5 @@
 import inspect
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, Literal, Optional, Tuple, Union
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -234,18 +234,18 @@ def add_alongtransect_data(
 
 def plot_transect(
     dataset: pd.DataFrame,
+    variable: str,
+    geo_config: Dict[str, Any],
     **kwargs,
 ):
 
     # Get the dataset variable name
-    variable = kwargs.get("variable", None)
-    # ---- Get the z-axis values
     z = dataset[variable].values
 
     # Get axis limits
     if not kwargs.get("axis_limits", None):
         # ---- Get survey bounds
-        survey_bounds = get_survey_bounds(dataset, kwargs.get("geo_config", None))
+        survey_bounds = get_survey_bounds(dataset, geo_config)
         # ---- Additional buffering
         axis_limits = dict(
             x=dict(xmin=survey_bounds[0] * 1.005, xmax=survey_bounds[2] * 0.995),
@@ -314,10 +314,10 @@ def plot_transect(
     plt.figure(**prune_args(plt.figure, **kwargs))
     # ---- Define GeoAxes
     ax = plt.axes(
-        projection=kwargs.get("geo_config")["plot_projection"], **prune_args(plt.axes, **kwargs)
+        projection=geo_config["plot_projection"], **prune_args(plt.axes, **kwargs)
     )
     # ---- Add coastline
-    ax.add_feature(kwargs.get("geo_config")["coastline"])
+    ax.add_feature(geo_config["coastline"])
     # ---- Add transect lines
     add_transect_lines(dataset, plot_order=1)
     # ---- Normalize the colormapping
@@ -329,6 +329,7 @@ def plot_transect(
     add_alongtransect_data(
         ax,
         dataset,
+        variable=variable,
         **dict(kwargs, cmap=cmap, norm=colormap_norm, plot_order=2, vmin=vmin, vmax=vmax),
     )
     # ---- Format the figure area axes
@@ -342,6 +343,9 @@ def plot_transect(
 
 def plot_mesh(
     dataset: pd.DataFrame,
+    variable: str,
+    geo_config: Dict[str, Any],
+    plot_type: Literal["hexbin", "pcolormesh", "scatter"],
     **kwargs,
 ):
 
@@ -349,23 +353,24 @@ def plot_mesh(
     units = "kg"
     kriged_variable = "biomass"
 
-    # Adjust values, if required
-    dataset.loc[dataset["biomass"] < 0.0, "biomass"] = 0.0
-    dataset.loc[dataset["kriged_mean"] < 0.0, "kriged_mean"] = 0.0
-
     # Get the dataset variable name
-    variable = kwargs.get("variable", None)
-    # ---- Get the x-axis values
+    variable_col = (
+        "kriged_mean" if variable == "biomass_density" 
+        else "sample_cv" if variable == "kriged_cv" 
+        else "sample_variance" if variable == "local_variance" else variable
+    )
+
+    # Get the x-axis values
     x = dataset["longitude"].values
     # ---- Get the y-axis values
     y = dataset["latitude"].values
     # ---- Get the z-axis values
-    z = dataset[variable].values
+    z = dataset[variable_col].values
 
     # Get axis limits
     if not kwargs.get("axis_limits", None):
         # ---- Get survey bounds
-        survey_bounds = get_survey_bounds(dataset, kwargs.get("geo_config", None))
+        survey_bounds = get_survey_bounds(dataset, geo_config)
         # ---- Additional buffering
         axis_limits = dict(
             x=dict(xmin=survey_bounds[0] * 1.005, xmax=survey_bounds[2] * 0.995),
@@ -380,7 +385,7 @@ def plot_mesh(
         reduce_C_function = kwargs.get("reduce_C_function", np.sum)
         colorbar_label = kwargs.get("colorbar_label", "Kriged biomass\n$\\mathregular{kg}$")
         vmax = kwargs.get("vmax", 10 ** np.round(np.log10(z.max())))
-    elif variable == "kriged_mean":
+    elif variable == "biomass_density":
         cmap = kwargs.get("cmap", "inferno")
         reduce_C_function = kwargs.get("reduce_C_function", np.mean)
         colorbar_label = kwargs.get(
@@ -395,12 +400,12 @@ def plot_mesh(
             f"Kriged {kriged_variable} density variance" + f"\n({units} " + "nmi$^{-2})^{2}$",
         )
         vmax = kwargs.get("vmax", 10 ** np.round(np.log10(z.max()), 1))
-    elif variable == "sample_cv":
+    elif variable == "kriged_cv":
         cmap = kwargs.get("cmap", "magma")
         reduce_C_function = kwargs.get("reduce_C_function", np.mean)
         colorbar_label = kwargs.get("colorbar_label", "Kriged $CV$")
         vmax = kwargs.get("vmax", np.ceil(z.max() / 0.1) * 0.1)
-    elif variable == "sample_variance":
+    elif variable == "local_variance":
         cmap = kwargs.get("cmap", "cividis")
         reduce_C_function = kwargs.get("reduce_C_function", np.mean)
         colorbar_label = kwargs.get(
@@ -417,9 +422,6 @@ def plot_mesh(
     # ---- y
     kwargs.update(dict(ylabel=kwargs.get("ylabel", "Latitude (\u00B0N)")))
 
-    # Get the plot type
-    plot_type = kwargs.get("plot_type", None)
-
     # Initialize figure
     # ---- Update the 'figsize' if it doesn't yet exist
     if not kwargs.get("figsize", None):
@@ -428,10 +430,10 @@ def plot_mesh(
     plt.figure(**prune_args(plt.figure, **kwargs))
     # ---- Define GeoAxes
     ax = plt.axes(
-        projection=kwargs.get("geo_config")["plot_projection"], **prune_args(plt.axes, **kwargs)
+        projection=geo_config["plot_projection"], **prune_args(plt.axes, **kwargs)
     )
     # ---- Add coastline
-    ax.add_feature(kwargs.get("geo_config")["coastline"])
+    ax.add_feature(geo_config["coastline"])
     # ---- Normalize the colormapping
     colormap_norm = add_colorbar(
         ax, **dict(kwargs, cmap=cmap, colorbar_label=colorbar_label, vmin=vmin, vmax=vmax)
@@ -467,7 +469,7 @@ def plot_mesh(
     # ---- Pseudocolor mesh
     elif plot_type == "pcolormesh":
         # ---- Create gridded (interpolated) dataset
-        grid_z = spatial_mesh(x, y, z, geo_config=kwargs.get("geo_config"))
+        grid_z = spatial_mesh(x, y, z, geo_config=geo_config)
         # ---- Plot
         grid_z.plot.pcolormesh(norm=colormap_norm, cmap=cmap, add_colorbar=False)
     # ---- Format the figure area axes
@@ -631,14 +633,10 @@ def add_heatmap_grid(
 
 def plot_age_length_distribution(
     data_dict: Dict[str, Any],
+    variable: str,
+    sex: str,
     **kwargs,
 ):
-
-    # Get the dataset variable name
-    variable = kwargs.get("variable")
-
-    # Get sex
-    sex = kwargs.get("sex")
 
     # Get the correct dataset for plotting
     # ---- Abundance
