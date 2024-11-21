@@ -1015,10 +1015,13 @@ class Survey:
         "mesh":
 
             - **"biomass"**: Kriged animal biomass.
-            - **"kriged_mean"**: Kriged animal biomass density.
-            - **"kriged_variance"**: Kriging variance.
-            - **"sample_cv"**: Mesh node coefficient of variation.
-            - **"sample_variance"**: Sample variance.
+            - **"biomass_density"**: Kriged animal biomass density.
+            - **"kriged_variance"**: Kriging variance, which represents the spatial uncertainty in 
+            prediced kriged estimates.
+            - **"kriged_cv"**: Coefficient of variation calculated for each mesh node.
+            - **"local_variance"**: Sample variance of local all transect values within the search 
+            radius of each mesh node.
+            
 
         "transect":
 

@@ -194,7 +194,7 @@ class MeshPlot(SpatialPlot):
 
     plot_type: Optional[Literal["hexbin", "pcolormesh", "scatter"]] = Field(default="hexbin")
     variable: Literal[
-        "biomass", "kriged_mean", "kriged_variance", "sample_cv", "sample_variance"
+        "biomass", "biomass_density", "kriged_variance", "kriged_cv", "local_variance"
     ] = Field(default="biomass")
 
     @field_validator("plot_type", mode="before")
