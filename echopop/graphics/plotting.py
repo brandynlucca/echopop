@@ -313,9 +313,7 @@ def plot_transect(
     # ---- Prepare figure
     plt.figure(**prune_args(plt.figure, **kwargs))
     # ---- Define GeoAxes
-    ax = plt.axes(
-        projection=geo_config["plot_projection"], **prune_args(plt.axes, **kwargs)
-    )
+    ax = plt.axes(projection=geo_config["plot_projection"], **prune_args(plt.axes, **kwargs))
     # ---- Add coastline
     ax.add_feature(geo_config["coastline"])
     # ---- Add transect lines
@@ -355,9 +353,13 @@ def plot_mesh(
 
     # Get the dataset variable name
     variable_col = (
-        "kriged_mean" if variable == "biomass_density" 
-        else "sample_cv" if variable == "kriged_cv" 
-        else "sample_variance" if variable == "local_variance" else variable
+        "kriged_mean"
+        if variable == "biomass_density"
+        else (
+            "sample_cv"
+            if variable == "kriged_cv"
+            else "sample_variance" if variable == "local_variance" else variable
+        )
     )
 
     # Get the x-axis values
@@ -429,9 +431,7 @@ def plot_mesh(
     # ---- Prepare figure
     plt.figure(**prune_args(plt.figure, **kwargs))
     # ---- Define GeoAxes
-    ax = plt.axes(
-        projection=geo_config["plot_projection"], **prune_args(plt.axes, **kwargs)
-    )
+    ax = plt.axes(projection=geo_config["plot_projection"], **prune_args(plt.axes, **kwargs))
     # ---- Add coastline
     ax.add_feature(geo_config["coastline"])
     # ---- Normalize the colormapping
