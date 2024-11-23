@@ -1095,9 +1095,9 @@ class Survey:
             # ---- Get the geospatial configuration
             geo_config = self.config["geospatial"].copy()
             # ---- Create copy of user-defined geospatial configuration
-            geo_param = parameters["geo_config"].copy()
+            geo_param = parameters.get("geo_config", {})
             # ---- Update the parameterization
-            parameters["geo_config"].update({**geo_config, **geo_param})
+            parameters.update({"geo_config": {**geo_config, **geo_param}})
 
         # Add the primary arguments into the dictionary
         parameters.update(dict(kind=kind, plot_type=plot_type, variable=variable))
