@@ -712,7 +712,7 @@ class Survey:
             )
 
         # Create a copy of the existing variogram settings
-        default_variogram_parameters = self.input["statistics"]["variogram"]["model_config"].copy()
+        default_variogram_parameters = self.input["statistics"]["variogram"]["model_config"]
         # ---- Update model, n_lags
         default_variogram_parameters.update({"model": model, "n_lags": n_lags})
 
