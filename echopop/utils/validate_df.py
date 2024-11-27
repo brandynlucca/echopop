@@ -601,7 +601,6 @@ class VarioKrigingPara(BaseDataFrame):
     """
 
     y_offset: Series[float] = Field(ge=-90.0, le=90.0, nullable=False, alias="dataprep.y_offset")
-    corr: Series[float] = Field(ge=0.0, nullable=False, alias="vario.corr")
     hole: Series[float] = Field(ge=0.0, nullable=False, alias="vario.hole")
     lscl: Series[float] = Field(ge=0.0, nullable=False, alias="vario.lscl")
     nugt: Series[float] = Field(ge=0.0, nullable=False, alias="vario.nugt")
