@@ -1,11 +1,13 @@
 import copy
 import re
-
 import numpy as np
 import pandas as pd
+
+
 from pandera import DataFrameModel, Field, check
 from pandera.errors import SchemaError, SchemaErrors
 from pandera.typing import Series
+from typing import List, Optional
 
 
 ####################################################################################################
@@ -62,13 +64,18 @@ class BaseDataFrame(DataFrameModel):
             or (pd.api.types.is_numeric_dtype(v) and (v % 1 == 0).all())
         ),
         float: lambda v: pd.api.types.is_float_dtype(v),
-        str: lambda v: pd.api.types.is_object_dtype(v),
+        str: lambda v: pd.api.types.is_string_dtype(v) and not isinstance(v, list),
+        List[str]: lambda v: all(
+            isinstance(x, list) and all(isinstance(xi, str) for xi in x)
+            for x in v
+        )
     }
 
     _DTYPE_COERCION = {
         int: lambda v: v.astype(np.float64, errors="ignore").astype(np.int64, errors="ignore"),
         float: lambda v: v.astype(np.float64, errors="ignore"),
         str: lambda v: v.astype(str, errors="ignore"),
+        List[str]: lambda v: [[str(i) for i in x] if isinstance(v, list) else x for x in v]
     }
 
     def __init__(self, *args, **kwargs):
@@ -102,51 +109,107 @@ class BaseDataFrame(DataFrameModel):
         # Initialize a DataFrame
         errors_coerce = pd.DataFrame(dict(Column=[], error=[]))
 
+        # Get the class schema
+        class_schema = cls.to_schema().columns
+
         # Coerce the data
+        # Coerce the data and test the data
         for column_name, dtype in col_types.items():
-            # ---- Apply coercion based on column patterns
+            # ---- Iterate across the data columns
             for col in df.columns:
+                # ---- Apply coercion and tests based on column patterns
                 if re.match(column_name, col):
-                    # ---- Retrieve the column name
-                    # Coerce the column to the appropriate dtype
+                    # ---- Initialize error flag
+                    error_flag = False
+                    # ---- Alternate method that equates to `typing.Union` that is otherwise disallowed 
                     if isinstance(dtype, list):
-                        # ---- Initialize the dtype of the validator annotation
-                        cls.__annotations__[col] = Series[dtype[0]]
-                        # ---- Check for all valid integers
-                        for typing in dtype:
-                            test = cls._DTYPE_TESTS.get(typing, None)
-                            # ---- Adjust typing annotations
-                            if test and test(df[col]):
-                                cls.__annotations__[col] = Series[typing]
-                                # break
-                            # ---- Coerce the datatypes
-                            try:
-                                df[col] = cls._DTYPE_COERCION.get(typing)(df[col])
-                                break
-                            except Exception as e:
-                                e.__traceback__ = None
-                                message = (
-                                    f"{col.capitalize()} column must be a Series of '{str(dtype)}' "
-                                    f"values. Series values could not be automatically coerced."
-                                )
-                                # errors_coerce.append(e)
-                                errors_coerce = pd.concat(
-                                    [errors_coerce, pd.DataFrame(dict(Column=col, error=message))]
-                                )
-                    # ---- If not a List from the metadata attribute
+                        # ---- Run an initial test with coercion, if configured
+                        tests = [d for d in dtype
+                                if (cls._DTYPE_TESTS[d](cls._DTYPE_COERCION[d](df[col])) 
+                                    and class_schema[column_name].coerce)
+                                or (cls._DTYPE_TESTS[d](df[col]) 
+                                    and not class_schema[column_name].coerce)]
+                        # ---- If only a single test succeeds (no coercion necessary)
+                        if len(tests) >= 1:
+                            # ---- Coerce
+                            if class_schema[column_name].coerce:
+                                df[col] = cls._DTYPE_COERCION[tests[0]](df[col])
+                            # ---- Update class annotation
+                            cls.__annotations__[column_name] = Series[tests[0]]
+                        # ---- If multiple tests succeed
+                        # elif len(tests) > 1:
+                        #     # ---- Retest using the uncoerced data
+                        #     cls._DTYPE_TESTS
+                        #     retests = [d for d in tests if cls._DTYPE_TESTS[d](df[col])]
+                        #     # ---- Find priority dtype
+                        #     if len(retests) >= 1:
+                        #         # ---- Coerce
+                        #         if class_schema[col].coerce:
+                        #             df[col] = cls._DTYPE_COERCION[retests[0]](df[col])
+                        #         # ---- Update class annotation giving priority to the leading dtype
+                        #         cls.__annotations__[col] = Series[retests[0]]
+                        else:
+                            # ---- Assign error
+                            error_flag = True
+                    # ----  When not `typing.Union`
                     else:
-                        try:
-                            df[col] = df[col].astype(str(dtype))
-                        except Exception as e:
-                            e.__traceback__ = None
-                            message = (
-                                f"{col.capitalize()} column must be a Series of '{str(dtype)}' "
-                                f"values. Series values could not be automatically coerced."
-                            )
-                            # errors_coerce.append(e)
-                            errors_coerce = pd.concat(
-                                [errors_coerce, pd.DataFrame(dict(Column=[col], error=[message]))]
-                            )
+                        # ---- Coerce
+                        if class_schema[column_name].coerce:
+                            try:
+                                df[col] = df[col].astype(dtype)
+                            except Exception:
+                                error_flag = True
+                    # ---- If the error flag was raised, raise the error message
+                    if error_flag:
+                        # ---- Join dtypes
+                        message = TypeError(
+                            f"{col.capitalize()} column must be a Series of '{str(dtype)}' "
+                            f"values. Series values could not be automatically coerced."      
+                        )
+                        # ---- Concatenate
+                        errors_coerce = pd.concat(
+                            [errors_coerce, pd.DataFrame(dict(Column=[col], error=[message]))]
+                        )
+                                                
+
+                            
+                            # # ---- Adjust typing annotations
+                            # if test and test(df[col]):
+                            #     # ---- Get the correct typing
+                            #     # cls.__annotations__[col] = Series[typing]
+                            #     correct_type = typing
+                            #     # break
+                            # # ---- Coerce the datatypes
+                            # try:
+                            #     df[col] = cls._DTYPE_COERCION.get(typing)(df[col])
+                            #     break
+                            # except Exception as e:
+                            #     e.__traceback__ = None
+                            #     message = (
+                            #         f"{col.capitalize()} column must be a Series of '{str(dtype)}' "
+                            #         f"values. Series values could not be automatically coerced."
+                            #     )
+                            #     # errors_coerce.append(e)
+                            #     errors_coerce = pd.concat(
+                            #         [errors_coerce, pd.DataFrame(dict(Column=col, error=message))]
+                            #     )
+                    # ---- If not a List from the metadata attribute
+                    # else:
+                    #     try:
+                    #         if class_schema[col].coerce:
+                    #             df[col] = df[col].astype(str(dtype))
+                    #         test = cls._DTYPE_TESTS.get(dtype)(df[col])
+                    #         if not test:
+                    #             raise Exception()
+                    #     except Exception:
+                    #         message = (
+                    #             f"{col.capitalize()} column must be a Series of '{str(dtype)}' "
+                    #             f"values. Series values could not be automatically coerced."
+                    #         )
+                    #         # errors_coerce.append(e)
+                    #         errors_coerce = pd.concat(
+                    #             [errors_coerce, pd.DataFrame(dict(Column=[col], error=[message]))]
+                    #         )
 
         # Return the DataFrame
         return errors_coerce
@@ -428,10 +491,11 @@ class KSStrata(BaseDataFrame):
     """
 
     fraction: Series[float] = Field(
-        ge=0.0, le=1.0, nullable=False, regex=True, alias=".*fraction.*"
+        ge=0.0, le=1.0, nullable=False, regex=True, coerce=True, alias=".*fraction.*"
     )
-    haul: Series = Field(nullable=False, regex=True, metadata=dict(types=[int, float]))
-    stratum: Series = Field(nullable=False, regex=True, metadata=dict(types=[int, float, str]))
+    haul: Series = Field(nullable=False, regex=True, coerce=True, metadata=dict(types=[int, float]))
+    stratum: Series = Field(nullable=False, regex=True, coerce=True, 
+                            metadata=dict(types=[int, float, str]))
 
     @check(
         "haul",
@@ -464,9 +528,9 @@ class GeoStrata(BaseDataFrame):
         Length-based stratum index/group. This column must include "stratum" in the name.
     """
 
-    haul: Series = Field(nullable=False, regex=True, metadata=dict(types=[int, float]))
-    northlimit_latitude: Series[float] = Field(ge=-90.0, le=90.0, nullable=False)
-    stratum: Series = Field(nullable=False, regex=True, metadata=dict(types=[int, float, str]))
+    haul: Series = Field(nullable=False, regex=True, coerce=True, metadata=dict(types=[int, float]))
+    northlimit_latitude: Series[float] = Field(ge=-90.0, le=90.0, coerce=True, nullable=False)
+    stratum: Series = Field(nullable=False, regex=True, coerce=True, metadata=dict(types=[int, float, str]))
 
     @check(
         "haul",
@@ -548,10 +612,10 @@ class IsobathData(BaseDataFrame):
     """
 
     latitude: Series[float] = Field(
-        ge=-90.0, le=90.0, nullable=False, regex=True, alias=".*latitude.*"
+        ge=-90.0, le=90.0, nullable=False, regex=True, coerce=True, alias=".*latitude.*"
     )
     longitude: Series[float] = Field(
-        ge=-180.0, le=180.0, nullable=False, regex=True, alias=".*longitude.*"
+        ge=-180.0, le=180.0, nullable=False, regex=True, coerce=True, alias=".*longitude.*"
     )
 
 
@@ -572,7 +636,7 @@ class KrigedMesh(IsobathData):
 
 class VarioKrigingPara(BaseDataFrame):
     """
-    Haul-transect map DataFrame
+    Kriging and variogram parameters
 
     Parameters
     ----------
@@ -600,6 +664,8 @@ class VarioKrigingPara(BaseDataFrame):
         The maximum number of nearest kriging points.
     """
 
+    # model: Optional[Series[str]] = Field(default=None, metadata=dict(types=[str]))
+    model: Series[str] = Field(alias="model")
     y_offset: Series[float] = Field(ge=-90.0, le=90.0, nullable=False, alias="dataprep.y_offset")
     hole: Series[float] = Field(ge=0.0, nullable=False, alias="vario.hole")
     lscl: Series[float] = Field(ge=0.0, nullable=False, alias="vario.lscl")

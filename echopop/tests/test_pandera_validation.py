@@ -101,47 +101,47 @@ def test_BaseDataFrame_model_structure(description, MOCK_DF, mock_model):
 @pytest.mark.parametrize(
     "input, expected, exception",
     [
-        (
+        ( # A1
             pd.DataFrame(dict(latitude=[0.0], longitude=[0.0])),
             pd.DataFrame(dict(latitude=[0.0], longitude=[0.0])),
             None,
         ),
-        (
+        ( # A2
             pd.DataFrame(dict(latitude=[-1.0, 0.0, 1.0], longitude=[-1.0, 0.0, 1.0])),
             pd.DataFrame(dict(latitude=[-1.0, 0.0, 1.0], longitude=[-1.0, 0.0, 1.0])),
             None,
         ),
-        (
+        ( # A3
             pd.DataFrame(dict(latitude=[-1.0, 0.0, 1.0], longitude=[-181.0, 0.0, 1.0])),
             None,
             "greater_than_or_equal_to(-180.0)",
         ),
-        (
+        ( # A4
             pd.DataFrame(dict(latitude=[-1.0, 0.0, 1.0], longitude=[-1.0, 0.0, 181.0])),
             None,
             "less_than_or_equal_to(180.0)",
         ),
-        (
+        ( # A5
             pd.DataFrame(dict(latitude=[-91.0, 0.0, 1.0], longitude=[-1.0, 0.0, 1.0])),
             None,
             "greater_than_or_equal_to(-90.0)",
         ),
-        (
+        ( # A6
             pd.DataFrame(dict(latitude=[-1.0, 0.0, 91.0], longitude=[1.0, 0.0, 1.0])),
             None,
             "less_than_or_equal_to(90.0)",
         ),
-        (
+        ( # A7
             pd.DataFrame(dict(latitude=[-1.0, 0.0, 1.0])),
             None,
             "'.*longitude.*' did not match any columns in the dataframe",
         ),
-        (
+        ( # A8
             pd.DataFrame(dict(longitude=[1.0, 0.0, 1.0])),
             None,
             "'.*latitude.*' did not match any columns in the dataframe",
         ),
-        (
+        ( # A9
             pd.DataFrame(dict()),
             None,
             [
@@ -149,22 +149,22 @@ def test_BaseDataFrame_model_structure(description, MOCK_DF, mock_model):
                 "'.*latitude.*' did not match any columns in the dataframe",
             ],
         ),
-        (
+        ( # A10
             pd.DataFrame(dict(latitude=[-1, 0, 1], longitude=[-1, 0, 1])),
             pd.DataFrame(dict(latitude=[-1.0, 0.0, 1.0], longitude=[-1.0, 0.0, 1.0])),
             None,
         ),
-        (
+        ( # A11
             pd.DataFrame(dict(latitude=[-1.0, 0.0, 1.0], longitude=["a", "b", "c"])),
             None,
             "Longitude column must be a Series of 'float64' values",
         ),
-        (
+        ( # A12
             pd.DataFrame(dict(latitude=["a", "b", "c"], longitude=[-1.0, 0.0, 1.0])),
             None,
             "Latitude column must be a Series of 'float64' values",
         ),
-        (
+        ( # A13
             pd.DataFrame(dict(latitude=["a", "b", "c"], longitude=["a", "b", "c"])),
             None,
             [
@@ -172,7 +172,7 @@ def test_BaseDataFrame_model_structure(description, MOCK_DF, mock_model):
                 "Longitude column must be a Series of 'float64' values",
             ],
         ),
-        (
+        ( # A14
             pd.DataFrame(dict(latitude=[-1.0, 0.0, "c"], longitude=["a", 0.0, 1.0])),
             None,
             [
@@ -180,12 +180,12 @@ def test_BaseDataFrame_model_structure(description, MOCK_DF, mock_model):
                 "Longitude column must be a Series of 'float64' values",
             ],
         ),
-        (
+        ( # A15
             pd.DataFrame(dict(central_latitude=[-1.0, 0.0, 1.0], longitude_funny=[-1.0, 0.0, 1.0])),
             pd.DataFrame(dict(central_latitude=[-1.0, 0.0, 1.0], longitude_funny=[-1.0, 0.0, 1.0])),
             None,
         ),
-        (
+        ( # A16
             pd.DataFrame(
                 dict(central_latitude=[np.nan, 0.0, 1.0], longitude_funny=[-1.0, np.nan, 1.0])
             ),
@@ -194,22 +194,22 @@ def test_BaseDataFrame_model_structure(description, MOCK_DF, mock_model):
         ),
     ],
     ids=[
-        "Simple DataFrame input [single row]",
-        "Simple DataFrame input [multiple rows]",
-        "Invalid longitude [lower limit]",
-        "Invalid longitude [upper limit]",
-        "Invalid latitude [lower limit]",
-        "Invalid latitude [upper limit]",
-        "Missing column [longitude]",
-        "Missing column [latitude]",
-        "Missing all columns",
-        "Incorrect datatyping but coercible",
-        "Incorrect 'Longitude' datatyping and not coercible",
-        "Incorrect 'Latitude' datatyping and not coercible",
-        "Incorrect 'Latitude' and 'Longitude' datatyping and not coercible",
-        "Partially incorrect 'Latitude' and 'Longitude' datatyping and not coercible",
-        "Coerced column names based on regex",
-        "Drop invalid NaN rows",
+        "[A1] Simple DataFrame input [single row]",
+        "[A2] Simple DataFrame input [multiple rows]",
+        "[A3] Invalid longitude [lower limit]",
+        "[A4] Invalid longitude [upper limit]",
+        "[A5] Invalid latitude [lower limit]",
+        "[A6] Invalid latitude [upper limit]",
+        "[A7] Missing column [longitude]",
+        "[A8] Missing column [latitude]",
+        "[A9] Missing all columns",
+        "[A10] Incorrect datatyping but coercible",
+        "[A11] Incorrect 'Longitude' datatyping and not coercible",
+        "[A12] Incorrect 'Latitude' datatyping and not coercible",
+        "[A13] Incorrect 'Latitude' and 'Longitude' datatyping and not coercible",
+        "[A14] Partially incorrect 'Latitude' and 'Longitude' datatyping and not coercible",
+        "[A15] Coerced column names based on regex",
+        "[A16] Drop invalid NaN rows",
     ],
 )
 def test_IsobathData_model(input, expected, exception):
@@ -372,12 +372,12 @@ def test_KrigedMesh_model(input, expected, exception):
 @pytest.mark.parametrize(
     "input, expected, exception",
     [
-        (
+        ( # C1
             pd.DataFrame(dict(haul=[1], northlimit_latitude=[1.0], stratum=[1])),
             pd.DataFrame(dict(haul=[1], northlimit_latitude=[1.0], stratum=[1])),
             None,
         ),
-        (
+        ( # C2
             pd.DataFrame(
                 dict(haul=[1, 2, 3], northlimit_latitude=[-1.0, 0.0, 1.0], stratum=[1, 2, 3])
             ),
@@ -386,36 +386,36 @@ def test_KrigedMesh_model(input, expected, exception):
             ),
             None,
         ),
-        (
+        ( # C3
             pd.DataFrame(
                 dict(haul=[1, 2, 3], northlimit_latitude=[-91.0, 0.0, 1.0], stratum=[1, 2, 3])
             ),
             None,
             "greater_than_or_equal_to(-90.0)",
         ),
-        (
+        ( # C4
             pd.DataFrame(
                 dict(haul=[1, 2, 3], northlimit_latitude=[-1.0, 0.0, 91.0], stratum=[1, 2, 3])
             ),
             None,
             "less_than_or_equal_to(90.0)",
         ),
-        (
+        ( # C5
             pd.DataFrame(dict(northlimit_latitude=[-1.0, 0.0, 1.0], stratum=[1, 2, 3])),
             None,
             "'haul' did not match any columns in the dataframe",
         ),
-        (
+        ( # C6
             pd.DataFrame(dict(haul=[1, 2, 3], stratum=[1, 2, 3])),
             None,
             "Column 'northlimit_latitude' not in dataframe",
         ),
-        (
+        ( # C7
             pd.DataFrame(dict(haul=[1, 2, 3], northlimit_latitude=[-1.0, 0.0, 1.0])),
             None,
             "'stratum' did not match any columns in the dataframe",
         ),
-        (
+        ( # C8
             pd.DataFrame(dict()),
             None,
             [
@@ -424,14 +424,14 @@ def test_KrigedMesh_model(input, expected, exception):
                 "column regex name='stratum'",
             ],
         ),
-        (
+        ( # C9
             pd.DataFrame(dict(haul=[1, 2, 3], northlimit_latitude=[-1, 0, 1], stratum=[1, 2, 3])),
             pd.DataFrame(
                 dict(haul=[1, 2, 3], northlimit_latitude=[-1.0, 0.0, 1.0], stratum=[1, 2, 3])
             ),
             None,
         ),
-        (
+        ( # C10
             pd.DataFrame(
                 dict(haul=[1.0, 2.0, 3.0], northlimit_latitude=[-1.0, 0.0, 1.0], stratum=[1, 2, 3])
             ),
@@ -440,7 +440,7 @@ def test_KrigedMesh_model(input, expected, exception):
             ),
             None,
         ),
-        (
+        ( # C11
             pd.DataFrame(
                 dict(
                     haul=[1.0, 2.0, 3.0],
@@ -453,7 +453,7 @@ def test_KrigedMesh_model(input, expected, exception):
             ),
             None,
         ),
-        (
+        ( # C12
             pd.DataFrame(
                 dict(
                     haul=[1.0, 2.0, 3.0],
@@ -466,7 +466,7 @@ def test_KrigedMesh_model(input, expected, exception):
             ),
             None,
         ),
-        (
+        ( # C13
             pd.DataFrame(
                 dict(
                     haul=[1.0, 2.0, 3.0],
@@ -475,25 +475,29 @@ def test_KrigedMesh_model(input, expected, exception):
                 )
             ),
             pd.DataFrame(
-                dict(haul=[1, 2, 3], northlimit_latitude=[-1.0, 0.0, 1.0], stratum=[1, "2a", "3b"])
+                dict(
+                    haul=[1, 2, 3], 
+                    northlimit_latitude=[-1.0, 0.0, 1.0], 
+                    stratum=["1", "2a", "3b"]
+                )                
             ),
             None,
         ),
-        (
+        ( # C14
             pd.DataFrame(
                 dict(haul=[1.0, 2.0, 3.0], northlimit_latitude=["a", "b", "c"], stratum=[1, 2, 3])
             ),
             None,
             "Northlimit_latitude column must be a Series of 'float64' values",
         ),
-        (
+        ( # C15
             pd.DataFrame(
                 dict(haul=[1.0, 2.0, 3.0], northlimit_latitude=["a", 0.0, 1.0], stratum=[1, 2, 3])
             ),
             None,
             "Northlimit_latitude column must be a Series of 'float64' values",
         ),
-        (
+        ( # C16
             pd.DataFrame(
                 dict(
                     haul_num=[1.0, 2.0, 3.0],
@@ -510,7 +514,7 @@ def test_KrigedMesh_model(input, expected, exception):
             ),
             None,
         ),
-        (
+        ( # C17
             pd.DataFrame(
                 dict(
                     haul_num=[np.nan, 2, 3, 4],
@@ -523,23 +527,23 @@ def test_KrigedMesh_model(input, expected, exception):
         ),
     ],
     ids=[
-        "Simple DataFrame input [single row]",
-        "Simple DataFrame input [multiple rows]",
-        "Invalid 'northlimit_latitude' [lower limit]",
-        "Invalid 'northlimit_latitude' [upper limit]",
-        "Missing column [haul]",
-        "Missing column [northlimit_latitude]",
-        "Missing column [stratum]",
-        "Missing all columns",
-        "Incorrect 'northlimit_latitude' datatyping but coercible",
-        "Haul column datatyping [float]",
-        "Stratum column datatyping [float]",
-        "Stratum column datatyping [str]",
-        "Stratum column datatyping [mixed]",
-        "Incorrect 'northlimit_latitude' datatyping and not coercible",
-        "Partially incorrect 'northlimit_latitude' datatyping and not coercible",
-        "Coerced column names based on [haul, stratum]",
-        "Drop invalid NaN rows",
+        "[C1] Simple DataFrame input [single row]",
+        "[C2] Simple DataFrame input [multiple rows]",
+        "[C3] Invalid 'northlimit_latitude' [lower limit]",
+        "[C4] Invalid 'northlimit_latitude' [upper limit]",
+        "[C5] Missing column [haul]",
+        "[C6] Missing column [northlimit_latitude]",
+        "[C7] Missing column [stratum]",
+        "[C8] Missing all columns",
+        "[C9] Incorrect 'northlimit_latitude' datatyping but coercible",
+        "[C10] Haul column datatyping [float]",
+        "[C11] Stratum column datatyping [float]",
+        "[C12] Stratum column datatyping [str]",
+        "[C13] Stratum column datatyping [mixed]",
+        "[C14] Incorrect 'northlimit_latitude' datatyping and not coercible",
+        "[C15] Partially incorrect 'northlimit_latitude' datatyping and not coercible",
+        "[C16] Coerced column names based on [haul, stratum]",
+        "[C17] Drop invalid NaN rows",
     ],
 )
 def test_GeoStrata_model(input, expected, exception):
@@ -633,7 +637,7 @@ def test_GeoStrata_model(input, expected, exception):
             pd.DataFrame(
                 dict(haul=[1.0, 2.0, 3.0], fraction=[0.0, 0.0, 1.0], stratum=[1, "2a", "3b"])
             ),
-            pd.DataFrame(dict(fraction=[0.0, 0.0, 1.0], haul=[1, 2, 3], stratum=[1, "2a", "3b"])),
+            pd.DataFrame(dict(fraction=[0.0, 0.0, 1.0], haul=[1, 2, 3], stratum=["1", "2a", "3b"])),
             None,
         ),
         (
