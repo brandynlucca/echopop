@@ -536,7 +536,7 @@ class CONFIG_DATA_MODEL(InputModel):
     report_path: Optional[str] = None
     data_root_dir: Optional[str] = None
     CAN_haul_offset: Optional[int] = None
-    ship_id: Optional[Union[int, str, float]] = None
+    ship_id: Optional[Union[int, str, float, Dict[Any, Any]]] = None
     export_regions: Optional[Dict[str, XLSXFile]] = None
 
     def __init__(self, filename, **kwargs):

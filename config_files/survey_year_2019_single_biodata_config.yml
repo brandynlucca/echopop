@@ -8,6 +8,16 @@
 # Parameters
 
 survey_year: 2019            # survey year being considered
+ship_id:
+  160:
+    survey: 201906
+    name: NOAA Ship Bell M Shimada
+    description: NOAA Fisheries Survey Vessel
+  584:
+    survey: 201906
+    name: FV Nordic Pearl
+    description: Canadian Coast Guard 
+    haul_offset: 200
 species:
   text_code: pacific_hake    # target species for the survey year -- species name
   number_code: 22500         # target species for the survey year -- numeric code
@@ -22,8 +32,8 @@ report_path: C:/Users/Brandyn/Documents/GitHub/EchoPro_data/Data/reports
 ##############################################################################
 # Directory path that contains all input data needed
 
-# data_root_dir: C:/Users/Brandyn Lucca/Documents/Data/echopop_2019
-data_root_dir: C:/Users/Brandyn/Documents/GitHub/EchoPro_data/Data/
+data_root_dir: C:/Users/Brandyn Lucca/Documents/Data/echopop_2019
+# data_root_dir: C:/Users/Brandyn/Documents/GitHub/EchoPro_data/Data/
 
 ##############################################################################
 # Input data files
