@@ -14,7 +14,7 @@ ship_id:
     name: NOAA Ship Bell M Shimada
     description: NOAA Fisheries Survey Vessel
   584:
-    survey: 201906
+    survey: 2019097
     name: FV Nordic Pearl
     description: Canadian Coast Guard 
     haul_offset: 200
