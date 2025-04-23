@@ -115,7 +115,7 @@ def load_dataset(
         A string (or list of strings) corresponding to the named datasets defined in both
         'CONFIG_MAP' and the dataset definitions located in the file configuration .yaml.
     """
-    
+
     # Re-initialize the input keys, if needed
     # ---- Get name of the proposed input dictionary keys
     input_keys = [
@@ -180,8 +180,8 @@ def load_dataset(
         if dataset == "biological":
             if "filename" and "sheetname" in configuration_dict[dataset]:
                 datalayers = {
-                    k:{"filename": configuration_dict[dataset]["filename"], "sheetname": v
-                    } for k, v in configuration_dict[dataset]["sheetname"].items()
+                    k: {"filename": configuration_dict[dataset]["filename"], "sheetname": v}
+                    for k, v in configuration_dict[dataset]["sheetname"].items()
                 }
         else:
             datalayers = configuration_dict[dataset]
@@ -211,12 +211,13 @@ def load_dataset(
                     config_map,
                     validation_settings,
                 )
-                
+
     # If all files could be successfully read in, update the `imported_data` list
     imported_data = map_imported_datasets(input_dict)
 
     # Update the data format of various inputs within `Survey`
     prepare_input_data(input_dict, configuration_dict, imported_data)
+
 
 def read_validated_data(
     input_dict: dict,
@@ -266,7 +267,7 @@ def read_validated_data(
         df_initial.columns = df_initial.columns.str.lower()
         # ---- Rename the columns
         df_initial.rename(columns=NAME_CONFIG, inplace=True)
-        # ---- Filter the dataset accordingly, if required 
+        # ---- Filter the dataset accordingly, if required
         if "ship_id" in configuration_dict and config_map[0] == "biological":
             # ---- Collect ship configuration
             ship_config = configuration_dict["ship_id"]
@@ -274,7 +275,7 @@ def read_validated_data(
             ship_ids = [*ship_config.keys()]
             # ---- Apply ship-based filter
             if "ship_id" in df_initial.columns:
-                df_filtered = df_initial.loc[df_initial["ship_id"].isin(ship_ids)]    
+                df_filtered = df_initial.loc[df_initial["ship_id"].isin(ship_ids)]
             # ---- Collect survey IDs, if present
             survey_ids = [
                 v["survey"] for v in configuration_dict["ship_id"].values() if "survey" in v
@@ -284,14 +285,15 @@ def read_validated_data(
                 df_filtered = df_filtered.loc[df_filtered["survey"].isin(survey_ids)]
             # ---- Collect haul offsets, if any are present
             haul_offsets = {
-                k: v["haul_offset"] for k, v in configuration_dict["ship_id"].items() 
+                k: v["haul_offset"]
+                for k, v in configuration_dict["ship_id"].items()
                 if "haul_offset" in v
             }
             # ---- Apply haul number offsets, if defined
-            if haul_offsets: 
-                df_filtered["haul_num"] = (
-                    df_filtered["haul_num"] + df_filtered["ship_id"].map(haul_offsets).fillna(0)
-                )       
+            if haul_offsets:
+                df_filtered["haul_num"] = df_filtered["haul_num"] + df_filtered["ship_id"].map(
+                    haul_offsets
+                ).fillna(0)
         else:
             df_filtered = df_initial.copy()
         # ---- Validate the dataframes

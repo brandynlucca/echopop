@@ -16,7 +16,7 @@ ship_id:
   584:
     survey: 2019097
     name: FV Nordic Pearl
-    description: Canadian Coast Guard 
+    description: Canadian Coast Guard
     haul_offset: 200
 species:
   text_code: pacific_hake    # target species for the survey year -- species name

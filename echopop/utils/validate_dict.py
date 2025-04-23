@@ -57,6 +57,7 @@ class XLSXFile(InputModel, title="*.xlsx file tree"):
     filename: str
     sheetname: Union[str, List[str], Dict[str, str]]
 
+
 class FileSettings(InputModel, title="parameter file settings"):
     """
     Parameter file settings
@@ -418,6 +419,7 @@ class CONFIG_INIT_MODEL(InputModel, arbitrary_types_allowed=True):
         else:
             return [posint(value) for value in v]
 
+
 class BiologicalSheets(InputModel, title="consolidated biological file input sheetnames"):
     """
     Consolidated biological data file input
@@ -435,6 +437,7 @@ class BiologicalSheets(InputModel, title="consolidated biological file input she
     length: str
     specimen: str
     catch: str
+
 
 class BiologicalFile(InputModel, title="consolidated biological file input"):
     """
@@ -454,6 +457,7 @@ class BiologicalFile(InputModel, title="consolidated biological file input"):
 
     filename: str
     sheetname: BiologicalSheets
+
 
 class BiologicalFiles(InputModel, title="biological file inputs"):
     """
