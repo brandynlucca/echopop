@@ -5,6 +5,8 @@ import pandas as pd
 class InversionBase(abc.ABC):
     """
     Class to handle inversion.
+
+    Allow stratum-specific model parameters.
     """
 
     def __init__(self, df_model_params: pd.DataFrame):

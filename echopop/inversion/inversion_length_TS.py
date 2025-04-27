@@ -3,6 +3,9 @@ from .inversion_base import InversionBase
 
 
 class InversionLengthTS(InversionBase):
+    """
+    Class to perform inversion using length-TS regression.
+    """
 
     def __init__(self, df_model_params: pd.DataFrame):
         super().__init__(df_model_params)
@@ -12,7 +15,7 @@ class InversionLengthTS(InversionBase):
 
         # Check df_model_params
         # -- check if df_model_params contain all required parameters
-        # -- for length-TS regression these are the slope and intercept        
+        # -- for length-TS regression these are slope and intercept        
 
     def invert(self, df_nasc: pd.DataFrame) -> pd.DataFrame:
 
