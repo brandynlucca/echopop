@@ -1,4 +1,4 @@
-from typing import Union, Dict
+from typing import Union, Dict, Tuple
 from pathlib import Path
 import pandas as pd
 
@@ -9,6 +9,7 @@ import pandas as pd
 # TODO: vario_krig_para is currently not used, right? If so, remove any related code
 
 
+# TODO: combine in content of preprocess_biodata()
 def load_biological_data(root_path: Union[str, Path], file_path_dict: Dict) -> Dict[pd.DataFrame]:
     """
     Load biological data from CSV
@@ -28,6 +29,7 @@ def load_biological_data(root_path: Union[str, Path], file_path_dict: Dict) -> D
     return df_bio_dict
 
 
+# TODO: combine in the current preprocess_spatial()
 def load_stratification(root_path: Union[str, Path], file_path_dict: Dict) -> Dict[pd.DataFrame]:
     """
     Load stratification schemes from CSV
@@ -43,12 +45,48 @@ def load_stratification(root_path: Union[str, Path], file_path_dict: Dict) -> Di
     -------
     A dictionary of dataframes containing bio_strate and geo_strata info
     """
+
     # `bio_strata` is the current `strata`
+
+    # In addition to the original operations in preprocess_spatial()
+    # also do stratum renaming for inpfc originall in transect.py::save_transect_coordinates()
+    # if stratum_def == "inpfc":
+    #     stratum_rename = "stratum_num"
+    # else:
+    #     stratum_rename = stratum_col
+
     df_strata_dict: Dict
     return df_strata_dict
 
 
-def load_kriging_params(root_path: Union[str, Path], file_path_dict: Dict) -> Dict[pd.DataFrame]:
+# same as the current preprocess_biology_spatial()
+def join_biological_stratification(
+    df_bio_dict: Dict[pd.DataFrame], df_strata_dict: Dict[pd.DataFrame]
+) -> Dict[pd.DataFrame]:
+    return df_bio_dict
+
+
+# same as the current preprocess_acoustic_spatial()
+def join_acoustic_stratification(
+    df_nasc: pd.DataFrame, df_strata_dict: Dict[pd.DataFrame]
+) -> pd.DataFrame:
+    return df_nasc
+
+
+# same as the current preprocess_acoustic_biology_spatial()
+def join_acoustic_all(
+    df_nasc: pd.DataFrame,
+    df_bio_dict: Dict[pd.DataFrame],
+    df_strata_dict: Dict[pd.DataFrame],
+    species_code
+) -> pd.DataFrame:
+    return df_nasc
+
+
+# NOTE: combine content of preprocess_statistics()
+def load_kriging_templates(
+    root_path: Union[str, Path], file_path_dict: Dict
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Load kriging input
 
@@ -63,55 +101,13 @@ def load_kriging_params(root_path: Union[str, Path], file_path_dict: Dict) -> Di
     -------
     A dictionary of dataframes containing kriging and isobath info
     """
-    df_kriging_dict: Dict
-    return df_kriging_dict
+    df_mesh: pd.DataFrame
+    df_isobath: pd.DataFrame
+    return df_mesh, df_isobath
 
 
-# same as the current preprocess_biodata()
-def clean_biological_data(df_bio_dict: Dict[pd.DataFrame]) -> Dict[pd.DataFrame]:
-    return df_bio_dict
-
-
-# same as the current preprocess_statistics()
-def update_kriging(
-    df_kriging_dict: Dict[pd.DataFrame],
-    kriging_params: Dict,
-) -> Dict[pd.DataFrame]:
-    return df_kriging_dict
-
-
-# same as the current preprocess_spatial()
-def clean_stratification(df_strata_dict: Dict[pd.DataFrame]) -> Dict[pd.DataFrame]:
-
-    # In addition to the original operations
-    # also do stratum renaming for inpfc originall in transect.py::save_transect_coordinates()
-    # if stratum_def == "inpfc":
-    #     stratum_rename = "stratum_num"
-    # else:
-    #     stratum_rename = stratum_col
-
-
-    return df_strata_dict
-
-
-# same as the current preprocess_acoustic_spatial()
-def join_acoustic_stratification(
-    df_acoustic_dict: Dict[pd.DataFrame], df_strata_dict: Dict[pd.DataFrame]
-) -> Dict[pd.DataFrame]:
-    return df_acoustic_dict
-
-# same as the current preprocess_biology_spatial()
-def join_biological_stratification(
-    df_bio_dict: Dict[pd.DataFrame], df_strata_dict: Dict[pd.DataFrame]
-) -> Dict[pd.DataFrame]:
-    return df_bio_dict
-
-
-# same as the current preprocess_acoustic_biology_spatial()
-def join_acoustic_all(
-    df_acoustic_dict: Dict[pd.DataFrame],
-    df_bio_dict: Dict[pd.DataFrame],
-    df_strata_dict: Dict[pd.DataFrame],
-    species_code
-) -> Dict[pd.DataFrame]:
-    return df_acoustic_dict
+# separate out components that are parameters
+def load_kriging_variogram_params(root_path: Union[str, Path], file_path_dict: Dict) -> Tuple[Dict, Dict]:
+    kriging_params_dict: dict
+    variogram_params_dict: dict
+    return kriging_params_dict, variogram_params_dict

@@ -245,37 +245,3 @@ def consolidate_echoview_nasc(
         Final NASC dataframe (filtered and cleaned).
     """
     pass
-
-
-
-
-# Script to organize NASC file
-nasc_path = "SOME_PATH"
-nasc_filename_pattern = "SOME_PATTERN"
-region_class_mapping = {}  # pattern-label mapping under transect_region_mapping/parts
-
-df_merged = merge_echoview_nasc(nasc_path, nasc_filename_pattern)
-df_transect_region_key = construct_transect_region_key(df_merged, region_class_mapping)
-
-# Use df.to_csv to save df_transect_region_key, in place of the specialized transect_region_key file
-# Keep read_transect_region_file and make sure its output is the same as construct_transect_region_key
-
-
-# Age-1+
-df_nasc_all_ages = consolidate_echoview_nasc(
-    df_merged,
-    region_names=["Age-1 Hake", "Age-1 Hake Mix", "Hake", "Hake Mix"]
-)
-
-# Age-2+ (no age 1)
-df_nasc_no_age1 = consolidate_echoview_nasc(
-    df_merged,
-    region_names=["Hake", "Hake Mix"]
-)
-
-# Use df.to_csv to save df_nasc_all_ages and df_nasc_no_age1 if needed
-
-# Use regular pd.read_csv to read df_nasc_*, effectively break up the current load_data()
-# -- there is no need to have a one-size-fits-all load_data function
-# -- you can validate the biological, stratification, and NASC data
-# -- but just read them in is fine: these are all files under our control
