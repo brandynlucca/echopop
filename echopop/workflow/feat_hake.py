@@ -1,8 +1,7 @@
 from typing import Dict
 import pandas as pd
 
-from echopop.nwfsc_feat import load
-from nwfsc_feat import ingest_echoview_nasc
+from echopop.nwfsc_feat import ingest_echoview_nasc, load_data
 
 
 # ===========================================
@@ -55,17 +54,19 @@ strata_path_dict: dict  # the "stratification" section of year_config.yml
 kriging_path_dict: dict  # the "kriging" section of year_config.yml
 kriging_param_dict: dict  # the "kriging_parameters" section of init_config.yml
 
-df_bio_dict: Dict[pd.DataFrame] = load.load_biological_data(root_path, file_path_dict=bio_path_dict)
-df_bio_dict = load.clean_biological_data(df_bio_dict)
+df_bio_dict: Dict[pd.DataFrame] = load_data.load_biological_data(root_path, file_path_dict=bio_path_dict)
+df_bio_dict = load_data.clean_biological_data(df_bio_dict)
 
-df_strata_dict: Dict[pd.DataFrame] = load.load_stratification(root_path, file_path_dict=strata_path_dict)
-df_strata_dict = load.clean_stratification(df_strata_dict)
+df_strata_dict: Dict[pd.DataFrame] = load_data.load_stratification(root_path, file_path_dict=strata_path_dict)
+df_strata_dict = load_data.clean_stratification(df_strata_dict)
 
-# TODO: Consider combining update_kriging() into load_kriging_params since it's simpler
-df_kriging_dict: Dict[pd.DataFrame] = load.load_kriging_params(root_path, file_path_dict=kriging_path_dict)
-df_kriging_dict = load.update_kriging(df_kriging_dict, kriging_params=kriging_param_dict)
+# TODO: move load_kriging_params and update_kriging to a separate script load_params.py
+# TODO: combine kriging params in update_kriging() and load_kriging_params()
+# TODO: split out variogram params into a separate function
+df_kriging_dict: Dict[pd.DataFrame] = load_data.load_kriging_params(root_path, file_path_dict=kriging_path_dict)
+df_kriging_dict = load_data.update_kriging(df_kriging_dict, kriging_params=kriging_param_dict)
 
 # Consolidate all input data into df_acoustic_dict
-df_bio_dict = load.join_biological_stratification(df_bio_dict, df_strata_dict)
-df_acoustic_dict = load.join_acoustic_stratification(df_acoustic_dict, df_strata_dict)
-df_acoustic_dict = load.join_acoustic_all(df_acoustic_dict, df_bio_dict, df_strata_dict, species_code)
+df_bio_dict = load_data.join_biological_stratification(df_bio_dict, df_strata_dict)
+df_acoustic_dict = load_data.join_acoustic_stratification(df_acoustic_dict, df_strata_dict)
+df_acoustic_dict = load_data.join_acoustic_all(df_acoustic_dict, df_bio_dict, df_strata_dict, species_code)
