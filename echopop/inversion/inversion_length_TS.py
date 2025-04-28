@@ -20,21 +20,11 @@ class InversionLengthTS(InversionBase):
 
     # same as the current aggregate_sigma_bs but with explicit inputs
     def get_stratified_sigma_bs(self, df_length: pd.DataFrame) -> pd.DataFrame:        
-        # Organize bio data
-        # -- meld the specimen and length dataframes together for downstream calculations
-        # -- regroup the length-specific length counts
-
-        # Merge bio and regression dfs
-        # -- create DataFrame containing all necessary regression coefficients
-        # -- merge with the biological data
-        # -- calculate predicted TS from the length values
+        # Calculate predicted sigma_bs based on length and length_count
         # -- convert TS to the linear domain ('sigma_bs')
 
-        # Calculate mean sigma_bs for all hauls and the specified stratum type
-        # -- impute sigma_bs values, if necessary, for missing strata
-        # -- calculate mean TS for all hauls, KS-strata, and INPFC strata
-
-        df_sigma_bs_haul: pd.DataFrame  # TODO: doesn't seem like we need this for downstream processing?
+        # Calculate mean sigma_bs for each stratum
+        # -- impute sigma_bs values if necessary
         df_sigma_bs_stratum: pd.DataFrame
 
         return df_sigma_bs_stratum
