@@ -1,3 +1,4 @@
+from typing import Literal, Dict
 import pandas as pd
 from .inversion_base import InversionBase
 
@@ -17,12 +18,61 @@ class InversionLengthTS(InversionBase):
         # -- check if df_model_params contain all required parameters
         # -- for length-TS regression these are slope and intercept        
 
-    def invert(self, df_nasc: pd.DataFrame) -> pd.DataFrame:
+    # same as the current aggregate_sigma_bs but with explicit inputs
+    def get_stratified_sigma_bs(self, df_length: pd.DataFrame) -> pd.DataFrame:        
+        # Organize bio data
+        # -- meld the specimen and length dataframes together for downstream calculations
+        # -- regroup the length-specific length counts
 
-        # Make df_model_params easy to combine
+        # Merge bio and regression dfs
+        # -- create DataFrame containing all necessary regression coefficients
+        # -- merge with the biological data
+        # -- calculate predicted TS from the length values
+        # -- convert TS to the linear domain ('sigma_bs')
 
-        # Join df_model_params and df_nasc
+        # Calculate mean sigma_bs for all hauls and the specified stratum type
+        # -- impute sigma_bs values, if necessary, for missing strata
+        # -- calculate mean TS for all hauls, KS-strata, and INPFC strata
 
-        # Perform inversion (regression)
+        df_sigma_bs_haul: pd.DataFrame  # TODO: doesn't seem like we need this for downstream processing?
+        df_sigma_bs_stratum: pd.DataFrame
+
+        return df_sigma_bs_stratum
+
+
+    def invert(self, df_nasc: pd.DataFrame, df_length: pd.DataFrame) -> pd.DataFrame:
+        """
+        Parameters
+        ----------
+        df_nasc : pd.DataFrame
+            Dataframe with NASC values.
+            At the minimum must have the following columns:
+
+            - ("lat", "lon") or ("latitude", "longitude")
+            - NASC
+
+            Can optionally has a column "stratum".
+            "stratum" must simultanenously exist in `df_nasc` and `df_length`.
+
+        df_length : pd.DataFrame
+            Dataframe with scatterer length distribution.
+            At the minimum must have the following columns:
+
+            - "length"
+            - "length_count"
+
+            Can optionally has a column "stratum".
+            "stratum" must simultanenously exist in `df_nasc` and `df_length`.
+
+        Returns
+        -------
+        df_nasc : pd.DataFrame
+            Dataframe with an added number density column
+        """
+
+        # Compute mean sigma_bs for each stratum
+        df_sigma_bs_stratum = self.get_stratified_sigma_bs(df_length)
+
+        # Perform inversion (compute number density based on stratified sigma_bs)
 
         pass

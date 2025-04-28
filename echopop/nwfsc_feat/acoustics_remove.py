@@ -14,7 +14,7 @@ def get_stratified_sigma_bs(
     df_bio_dict: Dict[pd.DataFrame],  # df_bio_dict from end of load_data.py
     ts_length_regression_dict: dict,  # only 1 species so do not need species code and related checking
     stratum_type: Literal["ks", "inpfc"],  # only do 1 type at each call
-) -> Dict[pd.DataFrame]:
+) -> pd.DataFrame:
     
     # Organize bio data
     # -- meld the specimen and length dataframes together for downstream calculations
@@ -30,7 +30,7 @@ def get_stratified_sigma_bs(
     # -- impute sigma_bs values, if necessary, for missing strata
     # -- calculate mean TS for all hauls, KS-strata, and INPFC strata
 
-    df_sigma_bs_haul: pd.DataFrame
+    df_sigma_bs_haul: pd.DataFrame  # TODO: do we need this for downstream processing?
     df_sigma_bs_stratum: pd.DataFrame
 
-    return {"df_haul_mean": df_sigma_bs_haul, "df_strata_mean": df_sigma_bs_stratum}
+    return df_sigma_bs_stratum
