@@ -3,6 +3,9 @@ import numpy as np
 import pandas as pd
 
 
+# Include:
+# - other functions needed to create mesh
+
 def create_mesh(
     df_transect: pd.DataFrame,
     df_mesh_template: pd.DataFrame,
