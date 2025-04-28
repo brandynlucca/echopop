@@ -115,32 +115,3 @@ def join_acoustic_all(
     species_code
 ) -> Dict[pd.DataFrame]:
     return df_acoustic_dict
-
-
-
-# Scripts to execute what's in Survey.load_survey_data()
-# All *_dict below are a subdict from the original config yaml
-
-root_path = "WHERE_ALL_DATA_IS"
-species_code = "SPECIES_CODE"
-df_acoustic_dict: Dict[pd.DataFrame]  # Load extract nasc data
-
-bio_path_dict: Dict  # the "biological" section of year_config.yml
-strata_path_dict: Dict  # the "stratification" section of year_config.yml
-kriging_path_dict: Dict  # the "kriging" section of year_config.yml
-kriging_param_dict: Dict  # the "kriging_parameters" section of init_config.yml
-
-df_bio_dict: Dict[pd.DataFrame] = load_biological_data(root_path, file_path_dict=bio_path_dict)
-df_bio_dict = clean_biological_data(df_bio_dict)
-
-df_strata_dict: Dict[pd.DataFrame] = load_stratification(root_path, file_path_dict=strata_path_dict)
-df_strata_dict = clean_stratification(df_strata_dict)
-
-# TODO: Consider combining update_kriging() into load_kriging_params since it's simpler
-df_kriging_dict: Dict[pd.DataFrame] = load_kriging_params(root_path, file_path_dict=kriging_path_dict)
-df_kriging_dict = update_kriging(df_kriging_dict, kriging_params=kriging_param_dict)
-
-# Consolidate all input data into df_acoustic_dict
-df_bio_dict = join_biological_stratification(df_bio_dict, df_strata_dict)
-df_acoustic_dict = join_acoustic_stratification(df_acoustic_dict, df_strata_dict)
-df_acoustic_dict = join_acoustic_all(df_acoustic_dict, df_bio_dict, df_strata_dict, species_code)
