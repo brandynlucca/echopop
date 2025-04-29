@@ -111,34 +111,3 @@ def consolidate_all_data(
     df_nasc = join_acoustic_stratification(df_nasc, df_strata_dict)
     df_nasc = join_acoustic_all(df_nasc, df_bio_dict, df_strata_dict)
     return df_nasc
-
-
-
-# TODO: combine content of preprocess_statistics()
-def load_kriging_templates(
-    root_path: Union[str, Path], file_path_dict: Dict
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Load kriging input
-
-    Parameters
-    ----------
-    root_path : str or Path
-        Path to CSV
-    file_path_dict : dict
-        Dictionary of paths to individual kriging and isobath files
-
-    Returns
-    -------
-    A dictionary of dataframes containing kriging and isobath info
-    """
-    df_mesh: pd.DataFrame
-    df_isobath: pd.DataFrame
-    return df_mesh, df_isobath
-
-
-# separate out components that are parameters
-def load_kriging_variogram_params(root_path: Union[str, Path], file_path_dict: Dict) -> Tuple[Dict, Dict]:
-    kriging_params_dict: dict
-    variogram_params_dict: dict
-    return kriging_params_dict, variogram_params_dict
