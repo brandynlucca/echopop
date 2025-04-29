@@ -53,8 +53,8 @@ bio_path_dict: dict  # the "biological" section of year_config.yml
                      # this will be simplified now that we read from the master spreadsheet
 strata_path_dict: dict  # the "stratification" section of year_config.yml
 
-df_bio_dict: Dict[pd.DataFrame] = load_data.load_biological_data(root_path, bio_path_dict)
-df_strata_dict: Dict[pd.DataFrame] = load_data.load_stratification(root_path, strata_path_dict)
+df_bio_dict = load_data.load_biological_data(root_path, bio_path_dict)
+df_strata_dict = load_data.load_stratification(root_path, strata_path_dict)
 
 # Consolidate all input data into df_acoustic_dict
 df_nasc_no_age1 = load_data.consolidate_all_data(
@@ -70,5 +70,7 @@ df_nasc_no_age1 = load_data.consolidate_all_data(
 kriging_path_dict: dict  # the "kriging" section of year_config.yml
                          # combined with the "kriging" section of init_config.yml
 
-df_mesh_template, df_isobath = load_data.load_kriging_templates(root_path, kriging_path_dict)
-kriging_param_dict, variogram_params_dict = load_data.load_kriging_variogram_params(root_path, kriging_path_dict)
+df_mesh_template, df_isobath = load_data.load_kriging_templates(
+    root_path, kriging_path_dict)
+kriging_param_dict, variogram_params_dict = load_data.load_kriging_variogram_params(
+    root_path, kriging_path_dict)
