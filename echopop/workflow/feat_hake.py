@@ -2,7 +2,7 @@ from typing import Dict, Union, Tuple
 from pathlib import Path
 import pandas as pd
 
-from echopop.nwfsc_feat import ingest_echoview_nasc, load_data
+from echopop.nwfsc_feat import ingest_nasc, load_data
 
 
 # ===========================================
@@ -11,9 +11,9 @@ nasc_path = "SOME_PATH"
 nasc_filename_pattern = "SOME_PATTERN"
 region_class_mapping = {}  # pattern-label mapping under transect_region_mapping/parts
 
-df_merged = ingest_echoview_nasc.merge_echoview_nasc(
+df_merged = ingest_nasc.merge_echoview_nasc(
     nasc_path, nasc_filename_pattern)
-df_transect_region_key = ingest_echoview_nasc.construct_transect_region_key(
+df_transect_region_key = ingest_nasc.construct_transect_region_key(
     df_merged, region_class_mapping)
 
 # Use df.to_csv to save df_transect_region_key, in place of the specialized transect_region_key file
@@ -21,13 +21,13 @@ df_transect_region_key = ingest_echoview_nasc.construct_transect_region_key(
 
 
 # Age-1+
-df_nasc_all_ages = ingest_echoview_nasc.consolidate_echoview_nasc(
+df_nasc_all_ages = ingest_nasc.consolidate_echoview_nasc(
     df_merged,
     region_names=["Age-1 Hake", "Age-1 Hake Mix", "Hake", "Hake Mix"]
 )
 
 # Age-2+ (no age 1)
-df_nasc_no_age1 = ingest_echoview_nasc.consolidate_echoview_nasc(
+df_nasc_no_age1 = ingest_nasc.consolidate_echoview_nasc(
     df_merged,
     region_names=["Hake", "Hake Mix"]
 )
