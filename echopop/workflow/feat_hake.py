@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from echopop.nwfsc_feat import ingest_nasc, load_data, biology
+from echopop.nwfsc_feat import get_proportions, ingest_nasc, load_data
 
 
 # ===========================================
@@ -83,17 +83,17 @@ kriging_param_dict, variogram_params_dict = load_data.load_kriging_variogram_par
 # ===========================================
 # Compute biological composition based on stratum
 length_bins: np.array  # length bin specification
-df_length_weight, df_regression = biology.get_length_weight_regression(df_bio_dict["specimen"], length_bins)
+df_length_weight, df_regression = get_proportions.length_weight_regression(df_bio_dict["specimen"], length_bins)
 # df_regression seems unused afterwards -- good as a record?
 
 # Get counts ----------------
-df_aged_counts = biology.get_fish_count(  # previously "aged_number_distribution"
+df_aged_counts = get_proportions.fish_count(  # previously "aged_number_distribution"
     df_specimen=df_bio_dict["specimen"],
     df_length=df_bio_dict["length"],
     aged=True,
     sexed=True,
 )
-df_unaged_counts = biology.get_fish_count(  # previously "unaged_number_distribution"
+df_unaged_counts = get_proportions.fish_count(  # previously "unaged_number_distribution"
     df_specimen=df_bio_dict["specimen"],
     df_length=df_bio_dict["length"],
     aged=False,
@@ -108,12 +108,12 @@ df_unaged_counts = biology.get_fish_count(  # previously "unaged_number_distribu
 # Get number proportions ----------------
 # TODO: DISCUSS THIS!
 # TODO: what does _overall stand for?
-da_number_proportion = biology.get_number_proportion()
+da_number_proportion = get_proportions.number_proportion()
 
 
 # Get weight proportions ----------------
 # aged fish - weight distribution
-da_sex_length_age: xr.DataArray = biology.get_weight_distributions(
+da_sex_length_age: xr.DataArray = get_proportions.weight_distributions(
     df_specimen=df_bio_dict["specimen"],
     df_length=df_bio_dict["length"],
     df_length_weight=df_length_weight,
@@ -121,7 +121,7 @@ da_sex_length_age: xr.DataArray = biology.get_weight_distributions(
 )
 
 # unaged fish - weight distribution
-da_sex_length: xr.DataArray = biology.get_weight_distributions(
+da_sex_length: xr.DataArray = get_proportions.weight_distributions(
     df_specimen=df_bio_dict["specimen"],
     df_length=df_bio_dict["length"],
     df_length_weight=df_length_weight,
@@ -129,10 +129,10 @@ da_sex_length: xr.DataArray = biology.get_weight_distributions(
 )
 
 # Get stratum averaged weight for all sex, male, female
-df_averaged_weight = biology.get_stratum_averaged_weight()
+df_averaged_weight = get_proportions.stratum_averaged_weight()
 
 
 # Get weight proportions ----------------
 # TODO: DISCUSS THIS!
 # TODO: what does _overall stand for?
-da_weight_proportion = biology.get_weight_proportion()
+da_weight_proportion = get_proportions.weight_proportion()

@@ -5,7 +5,7 @@ import xarray as xr
 
 
 # from the current fit_length_weight_relationship()
-def get_length_weight_regression(
+def length_weight_regression(
     df_specimen: pd.DataFrame,  # from df_bio_dict from load_data.py
     length_bins: np.array,
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
@@ -21,7 +21,7 @@ def get_length_weight_regression(
 
 
 # from the current quantize_number_counts()
-def get_fish_count(
+def fish_count(
     df_specimen: pd.DataFrame,  # from df_bio_dict from load_data.py
     df_length: pd.DataFrame,  # from df_bio_dict from load_data.py
     aged: bool,
@@ -33,7 +33,7 @@ def get_fish_count(
 
 # from the current number_proportions()
 # TODO: write out the math will make the function logic cleaner
-def get_number_proportion(
+def number_proportion(
     df_aged, df_unaged, df_weight,  # only include the necessary dfs -- I lost track
     proportion_type: Literal["age", "sex", "unaged_length", "unaged_length"]
 ) -> pd.DataFrame:
@@ -42,7 +42,7 @@ def get_number_proportion(
 
 
 # from the current quantize_weights()
-def get_weight_distributions(
+def weight_distributions(
     df_specimen: pd.DataFrame,
     df_length: pd.DataFrame,
     df_length_weight: pd.DataFrame,  # from get_length_weight_regression() above
@@ -63,10 +63,10 @@ def get_weight_distributions(
 
 # from the current fit_length_weights()
 # TODO: write out the math will make the function logic cleaner
-def get_stratum_averaged_weight() -> pd.DataFrame:
-    pass
+def stratum_averaged_weight() -> pd.DataFrame:
+    pass 
 
 
 # from the current weight_proportions()
-def get_weight_proportion():
+def weight_proportion():
     pass
