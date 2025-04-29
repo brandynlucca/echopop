@@ -5,6 +5,7 @@ import pandas as pd
 import xarray as xr
 
 from echopop.nwfsc_feat import get_proportions, ingest_nasc, load_data
+from echopop.kriging import Kriging
 
 
 # ===========================================
@@ -67,18 +68,6 @@ df_nasc_no_age1 = load_data.consolidate_all_data(
 
 
 
-# ===========================================
-# Load kriging-related params and templates
-kriging_path_dict: dict  # the "kriging" section of year_config.yml
-                         # combined with the "kriging" section of init_config.yml
-
-df_mesh_template, df_isobath = load_data.load_kriging_templates(
-    root_path, kriging_path_dict)
-kriging_param_dict, variogram_params_dict = load_data.load_kriging_variogram_params(
-    root_path, kriging_path_dict)
-
-
-
 
 # ===========================================
 # Compute biological composition based on stratum
@@ -136,3 +125,39 @@ df_averaged_weight = get_proportions.stratum_averaged_weight()
 # TODO: DISCUSS THIS!
 # TODO: what does _overall stand for?
 da_weight_proportion = get_proportions.weight_proportion()
+
+
+
+
+
+# ===========================================
+# NASC to number density
+
+
+
+
+
+
+# ===========================================
+# Perform kriging using class Kriging
+kriging = Kriging(
+    kriging_param_json="PATH_TO_KRIGING_PARAMS",
+    variogram_param_json="PATH_TO_VARIOGRAM_PARAMS",
+    mesh_template="PATH_TO_MESH_TEMPLATE",
+    isobath_template="PATH_TO_ISOBATH_REFERENCE",
+)
+
+# Create kriging mesh including cropping based on transects
+# Created mesh is stored in kriging.df_mesh
+kriging.create_mesh()
+
+# Perform coordinate transformation based on isobath if needed
+# This adds columns x/y to kriging.df_mesh
+kriging.latlon_to_xy()
+
+# Perform kriging
+# This adds kriging result columns to df_in
+df_out = kriging.krige(
+    df_in=df_nasc_no_age1,
+    variables="biomass"
+)

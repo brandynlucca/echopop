@@ -1,3 +1,3 @@
-from .api import kriging
+from .api import Kriging
 
-__all__ = ["kriging"]
+__all__ = ["Kriging"]

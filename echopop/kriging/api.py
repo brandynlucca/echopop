@@ -63,6 +63,8 @@ class Kriging():
 
         # Use other functions from mesh.py to create mesh
 
+        # Update self.df_mesh
+
         pass
 
     # equivalent to the current transform_geometry()
@@ -91,11 +93,14 @@ class Kriging():
         # latitude_offset
         # TODO: the current `reference_grid` is in self.df_isobath
         # NOTE: why does this need to be a geodataframe?
+
+        # Update self.df_mesh
+
         pass
 
 
     # Similar to the current "krige" function
-    def kriging(df_in: pd.DataFrame, variables: List[str]) ->  pd.DataFrame:
+    def krige(df_in: pd.DataFrame, variables: List[str]) ->  pd.DataFrame:
         """
         Perform kringing on selected variables.
 
