@@ -9,9 +9,11 @@ import pandas as pd
 
 # TODO: read from the master spreadsheet
 # TODO: combine in content of preprocess_biodata()
+# TODO: filter to only output data from 1 species
 def load_biological_data(
     root_path: Union[str, Path],
-    file_path_dict: Dict
+    file_path_dict: Dict,
+    species_code: str
 ) -> Dict[pd.DataFrame]:
     """
     Load biological data from master biological data spreadsheet.
@@ -93,7 +95,6 @@ def join_acoustic_all(
     df_nasc: pd.DataFrame,
     df_bio_dict: Dict[pd.DataFrame],
     df_strata_dict: Dict[pd.DataFrame],
-    species_code: str,
 ) -> pd.DataFrame:
     return df_nasc
 
@@ -102,15 +103,13 @@ def consolidate_all_data(
     df_nasc: pd.DataFrame,
     df_bio_dict: Dict[pd.DataFrame],
     df_strata_dict: Dict[pd.DataFrame],
-    species_code: str
 ) -> pd.DataFrame:
     """
     Consolidate all input data.
     """
     df_bio_dict = join_biological_stratification(df_bio_dict, df_strata_dict)
     df_nasc = join_acoustic_stratification(df_nasc, df_strata_dict)
-    df_nasc = join_acoustic_all(df_nasc, df_bio_dict, df_strata_dict, species_code)
-    
+    df_nasc = join_acoustic_all(df_nasc, df_bio_dict, df_strata_dict)
     return df_nasc
 
 

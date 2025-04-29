@@ -1,8 +1,10 @@
 from typing import Dict, Union, Tuple
 from pathlib import Path
+import numpy as np
 import pandas as pd
+import xarray as xr
 
-from echopop.nwfsc_feat import ingest_nasc, load_data
+from echopop.nwfsc_feat import ingest_nasc, load_data, biology
 
 
 # ===========================================
@@ -53,7 +55,7 @@ bio_path_dict: dict  # the "biological" section of year_config.yml
                      # this will be simplified now that we read from the master spreadsheet
 strata_path_dict: dict  # the "stratification" section of year_config.yml
 
-df_bio_dict = load_data.load_biological_data(root_path, bio_path_dict)
+df_bio_dict = load_data.load_biological_data(root_path, bio_path_dict, species_code)
 df_strata_dict = load_data.load_stratification(root_path, strata_path_dict)
 
 # Consolidate all input data into df_acoustic_dict
@@ -74,3 +76,63 @@ df_mesh_template, df_isobath = load_data.load_kriging_templates(
     root_path, kriging_path_dict)
 kriging_param_dict, variogram_params_dict = load_data.load_kriging_variogram_params(
     root_path, kriging_path_dict)
+
+
+
+
+# ===========================================
+# Compute biological composition based on stratum
+length_bins: np.array  # length bin specification
+df_length_weight, df_regression = biology.get_length_weight_regression(df_bio_dict["specimen"], length_bins)
+# df_regression seems unused afterwards -- good as a record?
+
+# Get counts ----------------
+df_aged_counts = biology.get_fish_count(  # previously "aged_number_distribution"
+    df_specimen=df_bio_dict["specimen"],
+    df_length=df_bio_dict["length"],
+    aged=True,
+    sexed=True,
+)
+df_unaged_counts = biology.get_fish_count(  # previously "unaged_number_distribution"
+    df_specimen=df_bio_dict["specimen"],
+    df_length=df_bio_dict["length"],
+    aged=False,
+    sexed=True,
+)
+# Previously there was also "aged_number_distribution_filtered" 
+# but it is simply df_aged_counts with unsexed fish removed, 
+# I think it is better to have that explicitly in the code, 
+# so removed OUTSIDE of the get_fish_count function
+
+
+# Get number proportions ----------------
+# TODO: DISCUSS THIS!
+# TODO: what does _overall stand for?
+da_number_proportion = biology.get_number_proportion()
+
+
+# Get weight proportions ----------------
+# aged fish - weight distribution
+da_sex_length_age: xr.DataArray = biology.get_weight_distributions(
+    df_specimen=df_bio_dict["specimen"],
+    df_length=df_bio_dict["length"],
+    df_length_weight=df_length_weight,
+    aged=True,
+)
+
+# unaged fish - weight distribution
+da_sex_length: xr.DataArray = biology.get_weight_distributions(
+    df_specimen=df_bio_dict["specimen"],
+    df_length=df_bio_dict["length"],
+    df_length_weight=df_length_weight,
+    aged=False,
+)
+
+# Get stratum averaged weight for all sex, male, female
+df_averaged_weight = biology.get_stratum_averaged_weight()
+
+
+# Get weight proportions ----------------
+# TODO: DISCUSS THIS!
+# TODO: what does _overall stand for?
+da_weight_proportion = biology.get_weight_proportion()
