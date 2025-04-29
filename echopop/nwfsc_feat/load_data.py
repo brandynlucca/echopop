@@ -111,3 +111,15 @@ def consolidate_all_data(
     df_nasc = join_acoustic_stratification(df_nasc, df_strata_dict)
     df_nasc = join_acoustic_all(df_nasc, df_bio_dict, df_strata_dict)
     return df_nasc
+
+
+# separate out components that are parameters
+def load_kriging_variogram_params(
+    root_path: Union[str, Path],
+    file_path_dict: Dict,
+    kriging_const: dict,
+) -> Tuple[Dict, Dict]:
+    # put what's in 
+    kriging_params_dict: dict
+    variogram_params_dict: dict
+    return kriging_params_dict, variogram_params_dict

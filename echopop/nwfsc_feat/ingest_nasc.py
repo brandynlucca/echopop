@@ -178,6 +178,8 @@ def read_transect_region_file() -> pd.DataFrame:
     pass
 
 
+# NOTE: can keep it but likely won't use in workflow, 
+#       since years with this info the files are already made
 # same as the current
 def construct_transect_region_key(
     df_merged: pd.DataFrame,
@@ -192,6 +194,24 @@ def construct_transect_region_key(
         Output of merge_echoview_nasc.
     region_class_mapping : dict
         Dict from config defining region name -> region class mapping.
+
+    Returns
+    -------
+    pd.DataFrame
+        Mapping of transects to region classes.
+    """
+    pass
+
+
+# TODO: consider renaming this based on what the operation
+def load_transect_region_key(file_path: Union[str, Path]) -> pd.DataFrame:
+    """
+    Load mapping between transects and region classes.
+
+    Parameters
+    ----------
+    file_path : str or Path
+        path to the transect_region_key
 
     Returns
     -------
@@ -227,7 +247,8 @@ def compute_depth_layer_height(
 # TODO: in the current code you created interval_copy from the updated df_interval, can you not use df_merged to get the same info?
 def consolidate_echoview_nasc(
     df_merged: pd.DataFrame,
-    region_names: List[str]
+    region_names: List[str],
+    survey_identifier: str,
 ) -> pd.DataFrame:
     """
     Consolidate NASC data for selected regions into final output.
@@ -244,4 +265,6 @@ def consolidate_echoview_nasc(
     pd.DataFrame
         Final NASC dataframe (filtered and cleaned).
     """
+    # survey_identifier constrols the `filter_transect_intervals` component
+
     pass

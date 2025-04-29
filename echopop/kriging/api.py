@@ -50,6 +50,9 @@ class Kriging():
         # Isobath if exists
         self.df_isobath: pd.DataFrame  # TODO: consider renaming this to df_xy_ref
 
+        # TODO: maybe put content of preprocess_statistics() in a method
+        # and run it here to update mesh and isobath dataframes
+
     def create_mesh(
         self,
         df_transect: pd.DataFrame,

@@ -12,12 +12,14 @@ from echopop.kriging import Kriging
 # Organize NASC file
 nasc_path = "SOME_PATH"
 nasc_filename_pattern = "SOME_PATTERN"
-region_class_mapping = {}  # pattern-label mapping under transect_region_mapping/parts
+region_class_filepath = "SOME_PATH"  # pattern-label mapping under transect_region_mapping/parts
+survey_identifier = "YEAR_MONTH"
 
 df_merged = ingest_nasc.merge_echoview_nasc(
     nasc_path, nasc_filename_pattern)
-df_transect_region_key = ingest_nasc.construct_transect_region_key(
-    df_merged, region_class_mapping)
+
+# Optional: only use for years needing this as external resources
+df_transect_region_key = ingest_nasc.load_transect_region_key(region_class_filepath)
 
 # Use df.to_csv to save df_transect_region_key, in place of the specialized transect_region_key file
 # Keep read_transect_region_file and make sure its output is the same as construct_transect_region_key
@@ -26,13 +28,15 @@ df_transect_region_key = ingest_nasc.construct_transect_region_key(
 # Age-1+
 df_nasc_all_ages = ingest_nasc.consolidate_echoview_nasc(
     df_merged,
-    region_names=["Age-1 Hake", "Age-1 Hake Mix", "Hake", "Hake Mix"]
+    region_names=["Age-1 Hake", "Age-1 Hake Mix", "Hake", "Hake Mix"],
+    survey_identifier=survey_identifier,
 )
 
 # Age-2+ (no age 1)
 df_nasc_no_age1 = ingest_nasc.consolidate_echoview_nasc(
     df_merged,
-    region_names=["Hake", "Hake Mix"]
+    region_names=["Hake", "Hake Mix"],
+    survey_identifier=survey_identifier,
 )
 
 # Use df.to_csv to save df_nasc_all_ages and df_nasc_no_age1 if needed
@@ -140,9 +144,23 @@ da_weight_proportion = get_proportions.weight_proportion()
 
 # ===========================================
 # Perform kriging using class Kriging
+# TODO:
+# put back FEAT-specific kriging files
+
+# Load kriging-related params
+kriging_const: dict  # from initalization_config.yaml:
+                     # A0, longitude_reference, longitude/latitude_offset
+kriging_path_dict: dict  # the "kriging" section of year_config.yml
+                         # combined with the "kriging" section of init_config.yml
+kriging_param_dict, variogram_param_dict = load_data.load_kriging_variogram_params(
+    root_path=root_path,
+    file_path_dict=kriging_path_dict,
+    kriging_const=kriging_const,
+)
+
 kriging = Kriging(
-    kriging_param_json="PATH_TO_KRIGING_PARAMS",
-    variogram_param_json="PATH_TO_VARIOGRAM_PARAMS",
+    kriging_param_dict=kriging_param_dict,
+    variogram_param_dict=variogram_param_dict,
     mesh_template="PATH_TO_MESH_TEMPLATE",
     isobath_template="PATH_TO_ISOBATH_REFERENCE",
 )
