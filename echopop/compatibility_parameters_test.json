@@ -230,5 +230,28 @@
     "transect_filter": {
       "subset_filter": "survey == 200509"
     }
-  }    
+  },
+  "2003": {
+    "transect_pattern": "T(\\d+)",
+    "bootstrap_ci_method": "percentile",
+    "exclude_age1": [
+      true,
+      false
+    ],
+    "extrapolate": [
+      false,
+      true
+    ],
+    "default_acoustics": true,
+    "read_transect_region_file": true,
+    "strata_types": [
+      "inpfc",
+      "ks"
+    ],
+    "write_transect_region_file": false,
+    "transect_replicates": 10,
+    "transect_filter": {
+      "subset_filter": "survey == 200316"
+    }
+  }   
 }
