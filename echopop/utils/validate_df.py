@@ -927,7 +927,7 @@ class EchoviewCells(BaseDataFrame):
     region_class: Series[str]
     region_id: Series[int]
     region_name: Series[str]
-    standard_deviation: Series[float] = Field(ge=0.0, nullable=False)
+    standard_deviation: Optional[Series[float]] = Field(ge=0.0, nullable=False)
     sv_mean: Series[float] = Field(ge=-999, nullable=True)
 
 

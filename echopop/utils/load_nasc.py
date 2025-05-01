@@ -398,6 +398,8 @@ def get_haul_strata_key(
     for region in strata_map:
         # ---- Get strata
         region_strata = strata_map[region]
+        # ---- Remove any unused
+        region_strata = [i for i in region_strata if i in trans_regions_copy.index ]
         # ---- Assign country codes
         trans_regions_copy.loc[region_strata, "country"] = region
 
