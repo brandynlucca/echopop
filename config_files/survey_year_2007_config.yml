@@ -30,7 +30,7 @@ biological:
   length:
     US:
       filename: Biological/US/biodata_length.xlsx
-      sheetname: Sheet1
+      sheetname: Sheet 1
   specimen:
     US:
       filename: Biological/US/biodata_specimen.xlsx
@@ -52,19 +52,19 @@ NASC:
   # NASC values
   no_age1:
     # file that excludes age1 values
-    filename: Exports/US_NASC_2007_table_no_age1.xlsx
+    filename: Exports/US_CAN_NASC_2007_table_no_age1.xlsx
     sheetname: Sheet1
   all_ages:
     # file that includes all ages
-    filename: Exports/US_NASC_2007_table_all_ages.xlsx
+    filename: Exports/US_CAN_NASC_2007_table_all_ages.xlsx
     sheetname: Sheet1
 transect_filter:
   # Transect interval filtering
   filename: C:/Users/Brandyn/Documents/GitHub/EchoPro_data/echopop_2007/Kriging_files/Kriging_grid_files/Transect Bounds to 2011.xlsx
   sheetname: "1995-2011"
 export_regions:
-  filename: Stratification/US&CAN_T_reg_haul_final.xlsx
-  sheetname: US&CAN_T_reg_haul_final
+  filename: Stratification/US&CAN_T_reg_haul.xlsx
+  sheetname: 2007_Regions_Trawls
 kriging:
   mesh:
     filename: Kriging_files/Kriging_grid_files/krig_grid2_5nm_cut_centroids_2013.xlsx
