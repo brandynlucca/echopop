@@ -930,6 +930,15 @@ class EchoviewCells(BaseDataFrame):
     standard_deviation: Optional[Series[float]] = Field(ge=0.0, nullable=False)
     sv_mean: Series[float] = Field(ge=-999, nullable=True)
 
+    @classmethod
+    def pre_validate(cls, df: pd.DataFrame) -> pd.DataFrame:
+        df = df.copy()
+        # ---- Adjust column names
+        if "region_label" in df.columns.str.lower().tolist():
+            df = df.rename(columns={"region_label": "region_name"})
+
+        return df
+
 
 class EchoviewIntervals(BaseDataFrame):
     """
@@ -975,6 +984,11 @@ class EchoviewIntervals(BaseDataFrame):
     @classmethod
     def pre_validate(cls, df: pd.DataFrame) -> pd.DataFrame:
         df = df.copy()
+        # ---- Adjust column names
+        if "exclude_below_depth_mean" in df.columns.str.lower().tolist():
+            df = df.rename(columns={"exclude_below_depth_mean": "exclude_below_line_depth_mean"})
+
+        #
         distance_s_aliases = ["distance_s", "dist_s", "vl_s", "vl_start", "vessel_log_start"]
         overlap_s = list(set(distance_s_aliases).intersection(df.columns))
 
