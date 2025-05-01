@@ -51,6 +51,7 @@ NAME_CONFIG = {
 ECHOVIEW_TO_ECHOPOP_NAMES = {
     "date_s": "ping_date",
     "exclude_below_line_depth_mean": "max_depth",
+    "exclude_below_depth_mean": "max_depth",
     "lat_s": "latitude",
     "lon_s": "longitude",
     "prc_nasc": "nasc",
