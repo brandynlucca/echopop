@@ -61,16 +61,20 @@ ECHOVIEW_TO_ECHOPOP_NAMES = {
 
 REGION_EXPORT_MAP = {
     "no_age1": {
-        "Tranect": dict(name="transect_num", type=int),
+        "Tranect": dict(name="transect_num", type=float),
+        "Transect": dict(name="transect_num", type=float),
         "Region ID": dict(name="region_id", type=int),
         "Trawl #": dict(name="haul_num", type=int),
+        "Assigned haul": dict(name="haul_num", type=float),
         "Region Name": dict(name="region_name", type=str),
         "Region Calss": dict(name="region_class", type=str),
     },
     "all_ages": {
-        "Tranect": dict(name="transect_num", type=int),
+        "Tranect": dict(name="transect_num", type=float),
+        "Transect": dict(name="transect_num", type=float),        
         "Region ID": dict(name="region_id", type=int),
-        "Trawl #": dict(name="haul_num", type=int),
+        "Trawl #": dict(name="haul_num", type=float),
+        "Assigned haul": dict(name="haul_num", type=float),
         "Region Name": dict(name="region_name", type=str),
         "Region Calss": dict(name="region_class", type=str),
     },
