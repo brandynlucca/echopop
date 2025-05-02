@@ -439,6 +439,7 @@ class CONFIG_INIT_MODEL(InputModel, arbitrary_types_allowed=True):
     nasc_exports: Optional[NASCExports] = Field(default=None)
     haul_to_transect_mapping: Optional[HaulTransectMap] = Field(default=None)
     transect_region_mapping: Optional[TransectRegionMap] = Field(default=None)
+    AFSC_nasc_conversion: Optional[Dict[str, Any]] = Field(default=None)
 
     def __init__(self, filename, **kwargs):
         try:
