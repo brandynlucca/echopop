@@ -39,7 +39,7 @@ biological:
       filename: Biological/CAN/biodata_specimen.xlsx
       sheetname: Sheet1
     US:
-      filename: Biological/US/biodata_so.xlsx
+      filename: Biological/US/biodata_specimen.xlsx
       sheetname: Sheet1
   catch:
     CAN:
@@ -61,12 +61,12 @@ NASC:
   # NASC values
   no_age1:
     # file that excludes age1 values
-    filename: Exports/US&CAN_detailsa_2001_table2y+_ALL_final_bml.xlsx
-    sheetname: updated data
+    filename: Exports/NASC_2001_table_no_age1.xlsx
+    sheetname: Sheet1
   all_ages:
     # file that includes all ages
-    filename: Exports/US&CAN_detailsa_2001_table1y+_ALL_final_bml.xlsx
-    sheetname: updated data
+    filename: Exports/NASC_2001_table_all_ages.xlsx
+    sheetname: Sheet1
 transect_filter:
   # Transect interval filtering
   filename: C:/Users/Brandyn/Documents/GitHub/EchoPro_data/echopop_2001/Kriging_files/Kriging_grid_files/Transect Bounds to 2011_bml.xlsx

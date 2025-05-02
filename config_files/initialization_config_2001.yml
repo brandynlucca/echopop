@@ -28,6 +28,26 @@
   ]
 
   #####################################################################################################################
+  # Acoustic transect export processing#
+  ########################
+  AFSC_nasc_conversion:
+    input_directory:
+      no_age1:
+        # file that excludes age1 values
+        filename: Exports/US&CAN_detailsa_2001_table2y+_ALL_final_bml.xlsx
+        sheetname: updated data
+      all_ages:
+        # file that includes all ages
+        filename: Exports/US&CAN_detailsa_2001_table1y+_ALL_final_bml.xlsx
+        sheetname: updated data
+    save_file_template: "{DATA_ROOT_DIR}/Exports/NASC_{YEAR}_table_{GROUP}.xlsx"
+    save_file_sheetname: Sheet1
+    max_transect_spacing: 10.0
+    transect_interval_distance: 0.5
+    default_region_id: 999
+    default_haul_id: 0
+
+  #####################################################################################################################
   # Log-linear regression#
   ########################
   # Target strength (TS) - length (L) regression: TS=m*log10(L)+b
