@@ -30,15 +30,24 @@ biological:
   length:
     CAN:
       filename: Biological/CAN/biodata_length.xlsx
-      sheetname: Sheet 1
+      sheetname: Sheet1
+    US:
+      filename: Biological/US/biodata_length.xlsx
+      sheetname: Sheet1
   specimen:
     CAN:
       filename: Biological/CAN/biodata_specimen.xlsx
-      sheetname: Sheet 1
+      sheetname: Sheet1
+    US:
+      filename: Biological/US/biodata_so.xlsx
+      sheetname: Sheet1
   catch:
     CAN:
       filename: Biological/CAN/biodata_catch.xlsx
-      sheetname: Sheet 1
+      sheetname: Sheet1
+    US:
+      filename: Biological/US/biodata_catch.xlsx
+      sheetname: Sheet1
 stratification:
   strata:
     # The two stratification types are found in two sheets: "Base KS" and "INPFC"
@@ -52,11 +61,11 @@ NASC:
   # NASC values
   no_age1:
     # file that excludes age1 values
-    filename: Exports/US&CAN_detailsa_2001_table2y+_ALL_final.xlsx
+    filename: Exports/US&CAN_detailsa_2001_table2y+_ALL_final_bml.xlsx
     sheetname: updated data
   all_ages:
     # file that includes all ages
-    filename: Exports/US&CAN_detailsa_2001_table1y+_ALL_final.xlsx
+    filename: Exports/US&CAN_detailsa_2001_table1y+_ALL_final_bml.xlsx
     sheetname: updated data
 transect_filter:
   # Transect interval filtering
