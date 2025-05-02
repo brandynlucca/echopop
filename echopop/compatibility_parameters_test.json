@@ -2,6 +2,7 @@
   "2023": {
     "transect_pattern": "T(\\d+)",
     "bootstrap_ci_method": "percentile",
+    "skip_echoview_ingestion": false,
     "exclude_age1": [
       true,
       false
@@ -22,6 +23,7 @@
   "2021": {
     "transect_pattern": "T(\\d+)",
     "bootstrap_ci_method": "percentile",
+    "skip_echoview_ingestion": false,
     "exclude_age1": [
       true,
       false
@@ -42,6 +44,7 @@
   "2019": {
     "transect_pattern": "T(\\d+)",
     "bootstrap_ci_method": "percentile",
+    "skip_echoview_ingestion": false,
     "exclude_age1": [
       true,
       false
@@ -62,6 +65,7 @@
   "2017": {
     "transect_pattern": "T(\\d+)",
     "bootstrap_ci_method": "percentile",
+    "skip_echoview_ingestion": false,
     "exclude_age1": [
       true,
       false
@@ -82,6 +86,7 @@
   "2015": {
     "transect_pattern": "T(\\d+)",
     "bootstrap_ci_method": "percentile",
+    "skip_echoview_ingestion": false,
     "exclude_age1": [
       true,
       false
@@ -102,6 +107,7 @@
   "2013": {
     "transect_pattern": "T(\\d+)",
     "bootstrap_ci_method": "percentile",
+    "skip_echoview_ingestion": false,
     "exclude_age1": [
       true,
       false
@@ -122,6 +128,7 @@
   "2012": {
     "transect_pattern": "T(\\d+)",
     "bootstrap_ci_method": "percentile",
+    "skip_echoview_ingestion": false,
     "exclude_age1": [
       true,
       false
@@ -142,6 +149,7 @@
   "2011": {
     "transect_pattern": "T(\\d+(?:\\.\\d+)?)(?=-)",
     "bootstrap_ci_method": "percentile",
+    "skip_echoview_ingestion": false,
     "exclude_age1": [
       true,
       false
@@ -165,6 +173,7 @@
   "2009": {
     "transect_pattern": "T(\\d+)",
     "bootstrap_ci_method": "percentile",
+    "skip_echoview_ingestion": false,
     "exclude_age1": [
       true,
       false
@@ -188,6 +197,7 @@
   "2007": {
     "transect_pattern": "T(\\d+)",
     "bootstrap_ci_method": "percentile",
+    "skip_echoview_ingestion": false,
     "exclude_age1": [
       true,
       false
@@ -211,6 +221,7 @@
   "2005": {
     "transect_pattern": "T(\\d+)",
     "bootstrap_ci_method": "percentile",
+    "skip_echoview_ingestion": false,
     "exclude_age1": [
       true,
       false
@@ -234,6 +245,7 @@
   "2003": {
     "transect_pattern": "T(\\d+)",
     "bootstrap_ci_method": "percentile",
+    "skip_echoview_ingestion": false,
     "exclude_age1": [
       true,
       false
@@ -253,5 +265,74 @@
     "transect_filter": {
       "subset_filter": "survey == 200316"
     }
-  }   
+  },
+  "2001": {
+    "bootstrap_ci_method": "percentile",
+    "skip_echoview_ingestion": true,
+    "exclude_age1": [
+      true,
+      false
+    ],
+    "extrapolate": [
+      false,
+      true
+    ],
+    "default_acoustics": true,
+    "read_transect_region_file": false,
+    "strata_types": [
+      "inpfc",
+      "ks"
+    ],
+    "write_transect_region_file": false,
+    "transect_replicates": 10,
+    "transect_filter": {
+      "subset_filter": "survey == 200108"
+    }
+  },
+  "1998": {
+    "bootstrap_ci_method": "percentile",
+    "skip_echoview_ingestion": true,
+    "exclude_age1": [
+      true,
+      false
+    ],
+    "extrapolate": [
+      false,
+      true
+    ],
+    "default_acoustics": true,
+    "read_transect_region_file": false,
+    "strata_types": [
+      "inpfc",
+      "ks"
+    ],
+    "write_transect_region_file": false,
+    "transect_replicates": 10,
+    "transect_filter": {
+      "subset_filter": "survey == 199810"
+    }
+  },
+  "1995": {
+    "bootstrap_ci_method": "percentile",
+    "skip_echoview_ingestion": true,
+    "exclude_age1": [
+      true,
+      false
+    ],
+    "extrapolate": [
+      false,
+      true
+    ],
+    "default_acoustics": true,
+    "read_transect_region_file": false,
+    "strata_types": [
+      "inpfc",
+      "ks"
+    ],
+    "write_transect_region_file": false,
+    "transect_replicates": 10,
+    "transect_filter": {
+      "subset_filter": "survey == 199510"
+    }
+  }
 }
