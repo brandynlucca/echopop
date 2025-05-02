@@ -648,13 +648,13 @@ class AcousticData(BaseDataFrame):
         ['dist_e', 'vl_e', 'vl_end', 'vessel_log_end']
     """
 
-    bottom_depth: Optional[Series[float]] = Field(nullable=False, coerce=True)
+    bottom_depth: Optional[Series[float]] = Field(nullable=True, coerce=True)
     haul_num: Series = Field(
         nullable=False, metadata=dict(types=[int, float], drop_invalid_rows=True)
     )
     latitude: Series[float] = Field(ge=-90.0, le=90.0, nullable=False, coerce=True)
-    layer_height: Optional[Series[float]] = Field(nullable=False, coerce=True)
-    layer_mean_depth: Optional[Series[float]] = Field(nullable=False, coerce=True)
+    layer_height: Optional[Series[float]] = Field(nullable=True, coerce=True)
+    layer_mean_depth: Optional[Series[float]] = Field(nullable=True, coerce=True)
     longitude: Series[float] = Field(ge=-180.0, le=180.0, nullable=False, coerce=True)
     nasc: Series[float] = Field(ge=0.0, nullable=False, coerce=True)
     region_id: Optional[Series] = Field(metadata=dict(types=[int, float, str]))
