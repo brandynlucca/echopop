@@ -920,13 +920,13 @@ class EchoviewCells(BaseDataFrame):
 
     """
 
-    interval: Series[int] = Field(ge=1, nullable=False)
-    layer: Series[int] = Field(ge=1, nullable=False)
+    interval: Series[int] = Field(ge=0, nullable=False)
+    layer: Series[int] = Field(ge=0, nullable=False)
     prc_nasc: Series[float] = Field(ge=0.0, nullable=False)
     process_id: Series[int]
     region_class: Series[str]
     region_id: Series[int]
-    region_name: Series[str]
+    region_name: Series[str] = Field(nullable=True)
     standard_deviation: Optional[Series[float]] = Field(ge=0.0, nullable=False)
     sv_mean: Series[float] = Field(ge=-999, nullable=True)
 
@@ -939,6 +939,20 @@ class EchoviewCells(BaseDataFrame):
 
         return df
 
+    @classmethod
+    def generate_empty_df(cls) -> pd.DataFrame:
+        """Generate an empty DataFrame with the correct columns"""
+        return pd.DataFrame({
+            "interval": [0],
+            "layer": [0],
+            "prc_nasc": [0.0],
+            "process_id": [0],
+            "region_class": ["DEFAULT"],
+            "region_id": [-99999],
+            "region_name": ["DEFAULT"],
+            "standard_deviation": [0.0],
+            "sv_mean": [0.0],
+        })
 
 class EchoviewIntervals(BaseDataFrame):
     """

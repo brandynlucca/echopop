@@ -11,7 +11,7 @@ survey_year: 2003            # survey year being considered
 species:
   text_code: pacific_hake    # target species for the survey year -- species name
   number_code: 22500         # target species for the survey year -- numeric code
-CAN_haul_offset: 900         # The value to be added to the Canadian's haul number
+CAN_haul_offset: 0         # The value to be added to the Canadian's haul number
 
 ##############################################################################
 # Report generation

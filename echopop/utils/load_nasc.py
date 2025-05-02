@@ -38,6 +38,10 @@ def read_echoview_export(filename: str, transect_number: int, validator: MetaMod
     # ---- Set the column names to lowercase
     export_file.columns = export_file.columns.str.lower()
 
+    # Replace with empty placeholder
+    if len(export_file) == 0:
+        export_file = validator.generate_empty_df()
+        
     # Validate
     export_valid = validator.validate_df(export_file, filename)
 
