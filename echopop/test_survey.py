@@ -23,7 +23,7 @@ import sys
 # CURRENT SURVEY YEAR BEING TESTED: 2019
 ####################################################################################################
 # Define current survey year
-SURVEY_YEAR = 2015
+SURVEY_YEAR = 2001
 
 # Initialization configuration
 init_config_path = f"C:/Users/Brandyn/Documents/GitHub/echopop/config_files/initialization_\
@@ -44,11 +44,92 @@ parameters = json_dict[f"{SURVEY_YEAR}"]
 # Run
 # ---- Create object
 survey = Survey(init_config_path, survey_year_config_path)
+
+self = survey
+input_dict = self.input
+configuration_dict = self.config
+dataset_type = "NASC"
+import copy
+from pathlib import Path
+from typing import List, Literal, Optional, Union
+
+import numpy as np
+import pandas as pd
+import yaml
+
+from echopop.core import BIODATA_HAUL_MAP, DATA_STRUCTURE, LAYER_NAME_MAP, NAME_CONFIG
+from echopop.utils.data_structure_utils import map_imported_datasets
+from echopop.utils.validate_df import DATASET_DF_MODEL, AcousticData
+from echopop.utils.validate_dict import CONFIG_DATA_MODEL, CONFIG_INIT_MODEL
+from echopop.utils.load import map_imported_datasets, read_validated_data
+import numpy as np
+
+survey_year = survey.config["survey_year"]
+survey.config.keys()
+afsc_conversion_config = survey.config["AFSC_nasc_conversion"]
+transect_interval_distance = afsc_conversion_config["transect_interval_distance"]
+transect_spacing = afsc_conversion_config["max_transect_spacing"]
+haul_default = afsc_conversion_config["default_haul_id"]
+region_id_default = afsc_conversion_config["default_region_id"]
+input_files = afsc_conversion_config["input_directory"]
+root = survey.config["data_root_dir"]
+filename_template = afsc_conversion_config["save_file_template"].replace("{DATA_ROOT_DIR}", root)
+export_sheetname = afsc_conversion_config["save_file_sheetname"]
+nasc_groups = survey.config["NASC"].keys()
+grp = "no_age1"
+verbose = True
+
+for grp in nasc_groups:
+    # ---- Initialize savefile template
+    save_file_template = filename_template
+    # ---- Prepare filename
+    file_name = Path(root) / survey.config["NASC"][grp]["filename"]
+    # ---- Prepare sheetname
+    sheet_name = survey.config["NASC"][grp]["sheetname"]
+    # ---- Read in the file
+    df = pd.read_excel(file_name, sheet_name=sheet_name)
+    # ---- Force the column names to be lower case
+    df.columns = df.columns.str.lower()
+    # ---- Apply column name mapping
+    df.rename(columns=NAME_CONFIG, inplace=True)
+    # ---- Create distance intervals
+    df.rename(columns={"distance": "distance_s"}, inplace=True)
+    # ---- End of interval
+    df["distance_e"] = df["distance_s"] + transect_interval_distance
+    # ---- Create placeholder for region ID
+    df["region_id"] = region_id_default
+    # ---- Fill in empty transect spacings
+    df.loc[
+        np.where(np.isnan(df["transect_spacing"]))[0], 
+        "transect_spacing"
+    ] = transect_spacing
+    # ----- Create placeholder for haul number
+    df["haul_num"] = haul_default
+    # ---- Validate the remaining dataframe
+    df_validated = AcousticData.validate_df(df)
+    # ---- Update survey year
+    save_file_template = save_file_template.replace("{YEAR}", str(survey_year))
+    # ---- Update export group
+    save_file_template = save_file_template.replace("{GROUP}", grp)
+    # ---- Save xlsx file
+    df_validated.to_excel(
+        excel_writer=save_file_template,
+        sheet_name=export_sheetname,
+        index=False,
+    )
+    # ---- Print out message
+    if verbose:
+        print(
+            f"Updated NASC export file for group '{grp}' saved at "
+            f"'{save_file_template}'."
+        )
+        
 # ---- Load acoustic data (Echoview export ingestion)
-survey.load_acoustic_data(ingest_exports="echoview",
-                          transect_pattern=parameters["transect_pattern"].replace(r"\\", "\\"),
-                          read_transect_region_file=parameters["read_transect_region_file"],
-                          write_transect_region_file=parameters["write_transect_region_file"])
+if not parameters["skip_echoview_ingestion"]:
+    survey.load_acoustic_data(ingest_exports="echoview",
+                            transect_pattern=parameters["transect_pattern"].replace(r"\\", "\\"),
+                            read_transect_region_file=parameters["read_transect_region_file"],
+                            write_transect_region_file=parameters["write_transect_region_file"])
 # ---- Load acoustic data (Already-defined file)
 if parameters["default_acoustics"]:
     survey =  Survey(init_config_path, survey_year_config_path)
@@ -64,8 +145,62 @@ if "transect_filter" in parameters:
     filter_transect_intervals(survey, parameters["transect_filter"]["subset_filter"])
 # ---- Load survey data
 survey.load_survey_data()
-# ---- Initial transect analysis test
-survey.transect_analysis()
+from echopop.acoustics import aggregate_sigma_bs, nasc_to_biomass
+from echopop.biology import (
+    distribute_length_age,
+    filter_species,
+    fit_length_weight_relationship,
+    fit_length_weights,
+    impute_kriged_values,
+    number_proportions,
+    partition_transect_age,
+    quantize_number_counts,
+    quantize_weights,
+    reallocate_kriged_age1,
+    weight_proportions,
+)
+from echopop.spatial.krige import kriging
+from echopop.spatial.mesh import crop_mesh, mesh_to_transects, stratify_mesh
+from echopop.spatial.projection import transform_geometry
+from echopop.spatial.transect import (
+    edit_transect_columns,
+    save_transect_coordinates,
+    summarize_transect_strata,
+    transect_spatial_features,
+)
+from echopop.spatial.variogram import (
+    empirical_variogram,
+    initialize_initial_optimization_values,
+    initialize_optimization_config,
+    initialize_variogram_parameters,
+    optimize_variogram,
+)
+from echopop.statistics import stratified_transect_statistic
+from echopop.utils.validate_dict import (
+    KrigingAnalysis,
+    KrigingParameterInputs,
+    MeshCrop,
+    VariogramBase,
+    VariogramEmpirical,
+)
+from echopop.spatial.transect import correct_transect_intervals
+from echopop.biology import age1_metric_proportions
+
+input_dict, analysis_dict, configuration_dict, settings_dict = self.input, self.analysis["transect"], self.config, self.analysis["settings"]# ---- Initial transect analysis test
+nasc_biology_df, fitted_weight_dict, settings_dict, population_dict, strata_adult_proportions_df = nasc_to_biology, analysis_dict["biology"]["weight"], settings_dict, analysis_dict["biology"]["population"], strata_adult_proportions
+
+
+
+survey.input["acoustics"]["nasc_df"].drop_duplicates(subset=["longitude", "latitude"])
+survey.input["acoustics"]["nasc_df"].loc[lambda x: x.longitude == -125.74421706]
+survey.input["acoustics"]["nasc_df"].loc[lambda x: x.transect_num == 19].drop_duplicates(subset=["longitude", "latitude"])
+np.sort(survey.input["acoustics"]["nasc_df"].groupby(["transect_num", "longitude", "latitude"]).size().reset_index(name="counts").sort_values("counts", ascending=False).loc[lambda x: x["counts"] > 1].transect_num.unique())
+# survey.transect_analysis()
+self = survey
+
+survey.kriging_analysis()
+
+
 # ---- Counter
 counter = 1
 # ---- Iterate across multiple strata types
