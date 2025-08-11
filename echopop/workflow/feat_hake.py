@@ -27,8 +27,8 @@ from echopop.nwfsc_feat import (
 # ==================================================================================================
 # DEFINE DATA ROOT DIRECTORY
 # --------------------------
-# DATA_ROOT = Path("C:/Users/Brandyn/Documents/GitHub/EchoPro_data/echopop_2019")
-DATA_ROOT = Path("C:/Users/Brandyn Lucca/Documents/Data/echopop_2019")
+DATA_ROOT = Path("C:/Users/Brandyn/Documents/GitHub/EchoPro_data/echopop_2019")
+# DATA_ROOT = Path("C:/Users/Brandyn Lucca/Documents/Data/echopop_2019")
 
 # ==================================================================================================
 # ==================================================================================================
@@ -733,6 +733,7 @@ geo.fit_variogram_model(
 # ------------------------------------
 geo.crop_mesh(
     crop_function=mesh.transect_ends_crop,
+    # cropping_method = ""
     latitude_resolution=1.25/60.,
     transect_mesh_region_function=FEAT.transect_mesh_region_2019,
 )

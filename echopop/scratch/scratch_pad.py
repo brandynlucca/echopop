@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 from typing import Callable, Union, Dict, List, Optional, Any
 from functools import reduce
-import pytest
 
 # Import the existing acoustics functions
 from ..acoustics import ts_length_regression, to_linear, to_dB, impute_missing_sigma_bs
@@ -30,497 +29,571 @@ survey = Survey(init_config_path = "C:/Users/Brandyn/Documents/GitHub/echopop/co
 survey.load_acoustic_data(ingest_exports="echoview")
 survey.load_survey_data()
 survey.transect_analysis()
+survey.stratified_analysis()
+survey.kriging_analysis()
+
 self = survey
 stratum = "ks"
 exclude_age1 = True
 species_id = 22500
 input_dict, analysis_dict, configuration_dict, settings_dict = self.input, self.analysis["transect"], self.config, self.analysis["settings"]
-
-
-stratify_by = "stratum_ks"
-df_average_weight = df_averaged_weight["all"]
-ts_length_regression_parameters={"slope": 20., "intercept": -68.}
-# number_proportions=dict_df_number_proportion["aged"]
-number_proportions = dict_df_number_proportion
-length_threshold_min=10.0
-weight_proportion_threshold=1e-10
-weight_proportions=dict_df_weight_proportion["aged"]
-include_filter = {"age_bin": [1]}
-
-###########
-df_nasc = df_nasc_no_age1.copy()
-number_proportions = dict_df_number_proportion
-group_by = ["sex"]
-stratify_by = ["stratum_ks"]
-exclude_filter = {"sex": "unsexed"}
-dataset = df_nasc.copy()
-
-def set_abundance(
-    dataset: pd.DataFrame,
-    stratify_by: List[str] = [],
-    group_by: List[str] = [],
-    exclude_filter: Dict[str, str] = {},
-    number_proportions: Optional[Dict[str, pd.DataFrame]] = None
-):
-
-    # If no grouping, run the simple abundance calculation    
-    dataset["abundance"] = dataset["area_interval"] * dataset["number_density"]
-    
-    # Compute grouped values, if needed
-    if number_proportions is not None:      
-        # ---- Set the index
-        dataset.set_index(stratify_by, inplace=True)
-        # ---- Create grouped table from number proportions
-        grouped_proportions = utils.create_grouped_table(
-            number_proportions,
-            group_cols = stratify_by + group_by,
-            strat_cols = group_by,
-            index_cols = stratify_by,
-            value_col = "proportion_overall"
-        )
-        # ---- Apply exclusion filter, if required
-        grouped_proportions_excl = utils.apply_filters(grouped_proportions,
-                                                       exclude_filter=exclude_filter)
-        # ---- Refine if no grouping
-        if len(group_by) == 0:
-            grouped_proportions_excl = grouped_proportions_excl["proportion_overall"]
-            number_density_vals = dataset["number_density"].values
-            abundance_vals = dataset["abundance"].values
-        else:
-            number_density_vals = dataset["number_density"].values[:, None]
-            abundance_vals = dataset["abundance"].values[:, None]     
-        # ---- Reindex the table
-        grouped_proportions_ridx = grouped_proportions_excl.reindex(dataset.index)
-        # ---- Compute number density
-        grouped_number_density = (
-            number_density_vals * grouped_proportions_ridx
-        )
-        # ---- Compute abundance
-        grouped_abundance = (
-            abundance_vals * grouped_proportions_ridx
-        )
-        # ---- Add the number densities to the dataset
-        dataset[
-            grouped_number_density.columns.map(lambda c: f"number_density_{c}")
-        ] = grouped_number_density.values
-        # ---- Add abundances to the dataset
-        dataset[
-            grouped_abundance.columns.map(lambda c: f"abundance_{c}")
-        ] = grouped_abundance.values
-        # ---- Reset the index
-        dataset.reset_index(inplace=True)
-
-#####
-# df_nasc = df_nasc_no_age1.copy()
-group_by = ["sex"]
-stratify_by = ["stratum_ks"]
-df_average_weight = df_averaged_weight["all"].copy()
-df_averaged_weight.loc[:, "all"]
-def matrix_multiply_grouped_table(
-    dataset: pd.DataFrame,
-    table: pd.DataFrame,      
-    variable: str, 
-    output_variable: str,
-    group: Optional[str] = None,
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
-
-    # Create pattern for column filtering
-    prefix_pattern = variable + "_"
-    
-    # Get the overlapping columns
-    variable_columns = dataset.filter(like=prefix_pattern).columns
-
-    # Gather the suffixes corresponding to the target group    
-    suffixes = variable_columns.str.replace(prefix_pattern, "", regex=False).to_list()
-
-    # Reindex table
-    table_ridx = table.reindex(dataset.index)
-    
-    # Apply an inclusion filter
-    target_groups = utils.apply_filters(table_ridx, include_filter={group: suffixes})
-
-    # Get columns that also exist for dataset
-    variable_overlap = [prefix_pattern + col for col in target_groups.columns]
-
-    # Reindex the target grouped table
-    target_groups_idx = target_groups.reindex(dataset.index)
-
-    # Run the multiplication
-    table_matrix = dataset.filter(variable_overlap).to_numpy() * target_groups_idx
-
-    # Set up column names
-    column_map = target_groups_idx.columns.map(lambda c: f"{output_variable}_{c}")
-
-    # Add the output variables
-    dataset[column_map] = table_matrix.values
-
-    # Calculate the remainder comprising the ungrouped values
-    remainder = dataset[variable] - dataset[variable_overlap].sum(axis=1)
-
-    # Calculate the output variable for the ungrouped/excluded values
-    remainder_matrix = remainder * table_ridx["all"]
-
-    # Compute the overall output variable
-    dataset[output_variable] = dataset[column_map].sum(axis=1) + remainder_matrix
-
-dataset = df_nasc.copy()
-table = df_average_weight.copy()
-group = table.columns.names[0]
-variables = ["number_density", "abundance"]
-variable = "number_density"
-
-def set_biomass(
-    dataset: pd.DataFrame,
-    stratify_by: List[str] = [],
-    group_by: List[str] = [],
-    df_average_weight: Optional[Union[pd.DataFrame, float]] = None
-):
-
-    # Set the index for the dataset
-    dataset.set_index(stratify_by, inplace=True)
-    
-    # Handle stratification and weight alignment
-    if isinstance(df_average_weight, (pd.DataFrame, pd.Series)):
-        # ---- Ensure weights are properly aligned with the associated dataset
-        if (
-            hasattr(df_average_weight, "columns") and 
-            not set(df_average_weight.index.names).intersection(stratify_by)
-        ):
-            df_average_weight.set_index(stratify_by, inplace=True)
-        elif isinstance(df_average_weight, pd.Series):
-            df_average_weight = df_average_weight.to_frame("all")
-    else:
-        # ---- Create associated Series from a single float
-        df_average_weight = pd.DataFrame(
-            {
-                "all": df_average_weight
-            },
-            index=dataset.index
-        )
-        
-    # If grouped
-    if len(group_by) > 0:
-        # ---- Compute the biomass densities across groups
-        matrix_multiply_grouped_table(dataset, 
-                                      df_average_weight, 
-                                      group_by[0], 
-                                      "number_density", 
-                                      "biomass_density")
-        # ---- Compute the biomass densities across groups
-        matrix_multiply_grouped_table(dataset, 
-                                      df_average_weight, 
-                                      group_by[0], 
-                                      "abundance", 
-                                      "biomass")
-    # Ungrouped
-    else:
-        # ---- Compute biomass densities
-        dataset["biomass_density"] = dataset["number_density"] * df_average_weight["all"]
-        # ---- Compute biomass
-        dataset["biomass"] = dataset["abundance"] * df_average_weight["all"]
-        
-    # Reset the index
-    dataset.reset_index(inplace=True)
-
-######
-(
-    nasc_biology_df,
-    fitted_weight_dict,
-    settings_dict,
-    population_dict,
-    strata_adult_proportions_df
-) = (
-    nasc_to_biology,
-    analysis_dict["biology"]["weight"],
-    settings_dict,
-    analysis_dict["biology"]["population"],
-    strata_adult_proportions
+analysis_dict, results_dict, spatial_dict, settings_dict = (
+    self.analysis,
+            self.results,
+            self.input["spatial"],
+            self.analysis["settings"]["stratified"]
 )
-######
-reapportion_dict = {"nasc": age1_nasc_proportions, 
-                    "abundance": age1_number_proportions,
-                    "biomass": age1_weight_proportions}
-dataset = df_nasc.copy()
-#####
-
-def partition_transect_data(
-    dataset: pd.DataFrame,
-    partition_dict: Dict[str, Union[pd.DataFrame, pd.Series]],
-) -> pd.DataFrame:
-    
-    # Create copy
-    dataset = dataset.copy()
-    
-    # Get the index names
-    index_names = list(set().union(*[set(df.index.names) for df in partition_dict.values()]))
-    
-    # Set the index of the input dataset
-    dataset.set_index(index_names, inplace=True)
-    
-    # NASC, if present
-    if "nasc" in partition_dict:
-        dataset["nasc"] = dataset["nasc"] * (1 - partition_dict["nasc"].reindex(dataset.index))
-        
-    # Abundance and number density, if present
-    if "abundance" in partition_dict:
-        # ---- Get the inverse proportions
-        abundance_proportions = (1 - partition_dict["abundance"].reindex(dataset.index))
-        # ---- Map the appropriate columns for abundance
-        abundance_names = dataset.filter(like="abundance").columns
-        # ---- Adjust abundances
-        dataset[abundance_names] = (abundance_proportions * dataset[abundance_names].T).T
-        # ---- Map the appropriate columns for number density
-        number_density_names = dataset.filter(like="number_density").columns
-        # ---- Adjust number densities
-        dataset[number_density_names] = (abundance_proportions * dataset[number_density_names].T).T
-        
-    # Biomass and biomass density, if present
-    if "biomass" in partition_dict:
-        # ---- Get the inverse proportions
-        biomass_proportions = (1 - partition_dict["biomass"].reindex(dataset.index))
-        # ---- Map the appropriate columns for biomass and biomass density
-        biomass_names = dataset.filter(like="biomass").columns
-        # ---- Adjust biomass
-        dataset[biomass_names] = (biomass_proportions * dataset[biomass_names].T).T    
-        
-    # Return the repartitioned dataset
-    return dataset
-
-################
-dataset = df_partitioned_no_age1.copy()
-proportions=dict_df_number_proportion["aged"]
-stratify_by=["stratum_ks"]
-group_by=["sex"]
-index=["length_bin"]
-columns=["age_bin"]
-
-group_by=["sex", "age_bin", "length_bin"]
-variable="biomass"
-
-# Sum over each group
-dataset_pvt = dataset.pivot_table(
-    index=stratify_by, values=variable, aggfunc="sum", observed=False
+transect_data, transect_summary, strata_summary, settings_dict = (
+    transect_data, transect_summary, strata_summary, settings_dict
+)
+population_dict = survey_dict
+bootstrap_samples, population_statistic, ci_percentile, boot_ci_method, boot_ci_method_alt, adjust_bias, estimator_name = (
+        bootstrap_dict["density"]["stratum"],
+        population_dict["density"]["stratum"],
+        settings_dict["bootstrap_ci"],
+        settings_dict["bootstrap_ci_method"],
+        settings_dict["bootstrap_ci_method_alt"],
+        settings_dict["bootstrap_adjust_bias"],
+        f"STRATUM {var_name.upper()} DENSITY",
 )
 
-# Parse the additional columns that are required for grouping
-proportions_group_columns = [
-    c for c in (list(proportions.index.names) + list(proportions.columns)) 
-    if c in group_by + index + columns
+rhom_all = (strata_transect_areas.to_numpy() * mean_arr_np).sum(axis=1) / strata_transect_areas.to_numpy().sum()
+
+
+
+
+
+            / strata_transect_areas.sum()).mean()
+
+##########################
+mesh_data = df_kriged_results.copy()
+geostratum_df = df_dict_geostrata["inpfc"].copy()
+geostrata_df=geostratum_df.copy()
+stratify_by = ["geostratum_inpfc"]
+variable = "biomass"
+mesh_transects_per_latitude = 5
+num_replicates = 10000
+strata_transect_proportion = 0.75
+##########################
+
+## ~~~
+transects_per_latitude = mesh_transects_per_latitude
+## ~~~
+
+model_params = {
+    "transects_per_latitude": 5,
+    "strata_transect_proportion": 0.75,
+    "num_replicates": 100
+}
+
+mp = model_params
+
+self = JollyHampton(model_params)
+data_df = self.create_virtual_transects(mesh_data, geostratum_df, stratify_by=["geostratum_inpfc"], variable="biomass")
+
+# Generate bins
+latitude_bins = np.concatenate([[-90.0], geostratum_df["northlimit_latitude"], [90.0]])
+
+data_df = mesh_data.copy()
+
+# Partition the mesh values into virtual transects
+mesh_data.loc[:, "latitude"] = (
+    np.round(mesh_data.loc[:, "latitude"] * transects_per_latitude + 0.5)
+    / transects_per_latitude
+)
+
+# Get the unique latitude values
+unique_latitude_transect_key = pd.DataFrame(
+    {
+        "latitude": np.unique(mesh_data["latitude"]),
+        "transect_num": np.arange(0, len(np.unique(mesh_data["latitude"])), 1) + 1,
+    }
+).set_index("latitude")
+
+# Temporarily set `mesh_data` index
+mesh_data.set_index("latitude", inplace=True)
+
+# Append the transect numbers
+mesh_data["transect_num"] = unique_latitude_transect_key
+
+# Reset the index
+unique_latitude_transect_key.reset_index(inplace=True)
+
+# Reset
+mesh_data.reset_index(inplace=True)
+
+# Create equivalent transect dataframe needed for the stratified summary analysis
+virtual_transect_data = mesh_data[
+    stratify_by + ["transect_num", "longitude", "latitude", "area", variable]
+].rename(columns={"area": "area_interval"})
+
+# Cut the virtual latitudes into their unique strata
+mesh_data.loc[:, stratify_by] = pd.cut(
+    mesh_data["latitude"],
+    latitude_bins,
+    labels=list(geostratum_df["stratum_num"]) + [1],
+    ordered=False,
+)
+
+
+####
+i = 1
+import geopy.distance
+
+df = virtual_transect_data.sort_values(["transect_num"]).set_index(["transect_num"])#.loc[i]
+df_red = df.groupby(level=0).apply(
+    lambda x: geopy.distance.distance(
+        (x.latitude.min(), x.longitude.min()), (x.latitude.max(), x.longitude.max())
+    ).nm
+).to_frame("distance")
+
+df_red.loc[:, "area"] = np.where(
+    df_red.index.isin([virtual_transect_data.transect_num.min(), 
+                       virtual_transect_data.transect_num.max()]),
+    df_red["distance"] * np.diff(unique_latitude_transect_key["latitude"]).mean() * 60,
+    df_red["distance"] * np.diff(unique_latitude_transect_key["latitude"]).mean() * 60 / 2
+)
+
+# Flip the latitude key
+unique_latitude_transect_key.set_index("transect_num", inplace=True)
+
+# Set the latitude
+df_red.loc[:, "latitude"] = unique_latitude_transect_key["latitude"]
+
+# 
+df_red = load_data.join_geostrata_by_latitude(df_red, 
+                                              geostratum_df, 
+                                              stratum_name=stratify_by[0])
+
+# Sum variable
+df_red[variable] = virtual_transect_data.groupby(["transect_num"])[variable].sum()
+
+############
+
+self = JollyHampton(mp)
+
+# Enumerate the number of transects per stratum
+strata_transect_counts = df_red.groupby(stratify_by, observed=False)["distance"].count()
+
+# Calculate the total transect area per stratum
+strata_transect_areas = df_red.groupby(stratify_by, observed=False)["area"].sum()
+
+# Index by stratum
+stratum_index = df_red[stratify_by].reset_index().set_index(stratify_by)
+
+# Calculate the number of transects per stratum
+num_transects_to_sample = np.round(
+    strata_transect_counts * strata_transect_proportion
+).astype(int)
+
+# Offset term used for later variance calculation
+sample_offset = np.where(num_transects_to_sample == 1, 0, 1)
+
+# Calculate effective sample size/degrees of freedom for variance calculation
+sample_dof = num_transects_to_sample * (num_transects_to_sample - sample_offset)
+
+import awkward as awk
+
+rng = np.random.default_rng()  # Use the new Generator API
+np.random.default_rng(None).choice([1, 2, 3, 4], 1)
+n_replicates = 10000
+
+# For each stratum, generate replicate samples of transect indices
+transect_samples = [
+    np.sort(
+        np.array([
+            rng.choice(stratum_index.loc[j, "transect_num"].values, 
+                       size=num_transects_to_sample.loc[j], replace=False)
+            for _ in range(num_replicates)
+        ])
+    )
+    for j in num_transects_to_sample.index
 ]
 
-# Create pivot table
-proportions_pvt = utils.create_pivot_table(
-    proportions,    
-    strat_cols=group_by,
-    index_cols=list(set(proportions_group_columns).difference(group_by)) + stratify_by,
-    value_col="proportion",
-)
+# Map integer positions to actual index values for each stratum
+# transect_samples = [
+#     np.sort(df_red.index.values[sample])  # sample is an array of integer positions
+#     for sample in transect_samples_idx
+# ]
 
-# Check if "all" exists for the `group_by` variable
-if "all" not in proportions[group_by]:
-    # ---- Add 'all'
-    proportions_pvt["all"] = proportions_pvt.sum(axis=1)
+samples_ak = awk.Array(transect_samples)  # shape: (n_strata, num_replicates, variable n_transects)
 
-# Re-pivot based on arguments
-proportions_pvt.stack(group_by).unstack(columns + stratify_by)
+# Use advanced indexing to get the sampled values
+# ---- Distances
+sampled_distances = awk.Array([
+    [df_red.loc[replicate, "distance"].to_numpy() for replicate in stratum]
+    for stratum in transect_samples
+])
+# ---- Areas
+sampled_areas = awk.Array([
+    [df_red.loc[replicate, "area"].to_numpy() for replicate in stratum]
+    for stratum in transect_samples
+])
+# ---- Variable
+sampled_values = awk.Array([
+    [df_red.loc[replicate, variable].to_numpy() for replicate in stratum]
+    for stratum in transect_samples
+])
 
-# Pivot
-utils.create_pivot_table(
-    proportions,    
-    strat_cols=group_by,
-    index_cols=list(set(proportions_group_columns).difference(group_by)) + stratify_by,
-    value_col="proportion",
-)
+# Now, all calculations are vectorized over awkward arrays:
+length_arr   = awk.sum(sampled_distances, axis=-1)  # shape: (n_strata, n_replicates)
+area_arr     = awk.sum(sampled_areas, axis=-1)
+total_arr    = awk.sum(sampled_values, axis=-1)
+
+#
+stratified_weights = sampled_distances / awk.mean(sampled_distances, axis=-1, keepdims=True)
+
+#
+biology_adjusted = sampled_values / sampled_distances
+
+#
+mean_arr     = awk.sum(sampled_values * sampled_distances, axis=-1) / length_arr
+biology_adjusted = sampled_values / sampled_distances
+
+stratified_weights = sampled_distances / awk.mean(sampled_distances, axis=-1, keepdims=True)
+
+squared_deviation = (biology_adjusted - mean_arr[..., None]) ** 2
+squared_deviation_wgt = awk.sum(stratified_weights**2 * squared_deviation, axis=-1)
+
+# sample_dof: a 1D array or Series, one per stratum
+variance_arr = squared_deviation_wgt / awk.Array(sample_dof.values)[:, None]
+
+# Convert and transpose all arrays in one step
+length_arr_np, mean_arr_np, area_arr_np, total_arr_np, variance_arr_np = [
+    awk.to_numpy(arr).T
+    for arr in [length_arr, mean_arr, area_arr, total_arr, variance_arr]
+]
+
+mean_arr_np.sum(axis=1)
+DEG = (mean_arr_np * strata_transect_areas.to_numpy())
+DEG * 1e-9
+
+transect_samples[0][0] = np.array([1, 3, 5, 6, 7])
+transect_samples[1][0] = np.array([8,    10,    12,    13,    14,    15,    16,    17,    20,    21,    22,    23,    24,    25,    26,    27,    29]) 
+transect_samples[2][0] = np.array([31, 32, 33, 35, 36, 37, 38, 39, 41])                                                                               
+transect_samples[3][0] = np.array([43, 45, 46, 47, 48, 49, 50, 52, 53, 54, 55]) 
+transect_samples[4][0] = np.array([57, 58, 59, 61, 62, 63, 64, 66, 67, 69, 70])
+transect_samples[5][0] = np.array([71, 72, 73, 74, 75, 78, 79, 80, 81, 83, 84, 86, 87, 88, 90, 91, 93, 95, 96, 97, 98, 99, 101, 102])
+
+mean_arr_np.min(axis=0) * 1e-7; mean_arr_np.mean(axis=0) * 1e-7; mean_arr_np.max(axis=0) * 1e-7
+total_arr_np.min(axis=0) * 1e-8; total_arr_np.mean(axis=0) * 1e-8; total_arr_np.max(axis=0) * 1e-8
+variance_arr_np.min(axis=0) * 1e-14; variance_arr_np.mean(axis=0) * 1e-14; variance_arr_np.max(axis=0) * 1e-14
+
+# ---- By stratum (density)
+unweighted_stratum_density = mean_arr_np / length_arr_np
+
+# ---- By stratum (total)
+unweighted_stratum_total = unweighted_stratum_density * strata_transect_areas.to_numpy()
+
+# ---- By survey (total)
+unweighted_survey_total = unweighted_stratum_total.sum(axis=1)
+
+# ---- By survey (density)
+unweighted_survey_density = unweighted_survey_total / strata_transect_areas.sum()
+
+# ---- Proportional stratum distributions
+unweighted_stratum_proportions = total_arr_np / total_arr_np.sum(axis=1, keepdims=True)
+
+# ---- Transect-length weighted coefficient of variation (CV)
+weighted_variance = (variance_arr_np * strata_transect_areas.to_numpy()**2).sum(axis=1)
+weighted_stdev = np.sqrt(weighted_variance)
+weighted_mean = (mean_arr_np * strata_transect_areas.to_numpy()).sum(axis=1)
+bootstrap_cv = weighted_stdev / weighted_mean
+
+weighted_mean.mean() * 1e-11
+
+(unweighted_stratum_density.T * length_arr_np.sum(axis=1)).sum(axis=1) * 1e-9
+
+    # Create bootstrapped results dictionary
+    bootstrap_dict = {
+        "density": {"stratum": unweighted_stratum_density, "survey": unweighted_survey_density},
+        "total": {"stratum": unweighted_stratum_total, "survey": unweighted_survey_total},
+        "proportions": unweighted_stratum_proportions,
+        "cv": bootstrap_cv,
+    }
+
+    # Estimate the confidence intervals (CIs) and biases for the survey data using the bootstrapped
+    # results
+    bootstrapped_cis = bootstrap_confidence_intervals(bootstrap_dict, survey_dict, settings_dict)
+
+    # Output the related summary statistics
+    # ---- Save the output resampled distributions
+    resampled_distributions = pd.DataFrame(
+        {
+            "realization": np.arange(1, transect_replicates + 1),
+            "unweighted_survey_density": unweighted_survey_density,
+            "unweighted_survey_total": unweighted_survey_total,
+            "weighted_survey_total": weighted_mean,
+            "weighted_survey_variance": weighted_variance,
+            "survey_cv": bootstrap_cv,
+        }
+    )
+    # ---- Save the stratified results
+    stratified_results = {
+        "variable": settings_dict["variable"],
+        "ci_percentile": 0.95,
+        "num_transects": strata_copy["transect_count"].sum(),
+        "stratum_area": area_array,
+        "total_area": total_area,
+        "estimate": {
+            "strata": {
+                "density": stratum_density_means,
+                "total": stratum_total,
+                "proportion": stratum_proportions,
+            },
+            "survey": {
+                "density": survey_density_mean,
+                "total": survey_total,
+                "cv": bootstrap_cv.mean(),
+            },
+        },
+        "ci": bootstrapped_cis["ci"],
+        "bias": bootstrapped_cis["bias"],
+    }
+    # ---- Return outputs
+    return resampled_distributions, stratified_results
+    
+
+        # # Create copy
+        # data_df = data_df.copy()
+
+        # # Partition the dataset into virtual transects based on latitude
+        # data_df.loc[:, "latitude"] = (
+        #     np.round(data_df.loc[:, "latitude"] * mp["transects_per_latitude"] + 0.5) /
+        #     mp["transects_per_latitude"]
+        # )
+
+        # # Create unique key pairs for latitude and transect
+        # unique_latitude_transect_key = pd.DataFrame(
+        #     {
+        #         "latitude": np.unique(data_df["latitude"]),
+        #         "transect_num": np.arange(0, len(np.unique(data_df["latitude"])), 1) + 1,
+        #     }
+        # ).set_index("latitude")
+
+        # # Temporarily set `mesh_data` index
+        # data_df.set_index("latitude", inplace=True)
+
+        # # Append the transect numbers
+        # data_df["transect_num"] = unique_latitude_transect_key
+
+        # # Reset the key index
+        # unique_latitude_transect_key.reset_index(inplace=True)
+
+        # # Reset the dataset index
+        # data_df.reset_index(inplace=True)
+
+        # # Create equivalent transect dataframe needed for the stratified summary analysis
+        # virtual_df = data_df[
+        #     stratify_by + ["transect_num", "longitude", "latitude", "area", variable]
+        # ].rename(
+        #     columns={"area": "area_interval"}
+        # ).sort_values(["transect_num"]).set_index(["transect_num"])
+
+        # # Compute the transect distances
+        # virtual_transect_data = virtual_df.groupby(level=0).apply(
+        #     lambda x: geopy.distance.distance(
+        #         (x.latitude.min(), x.longitude.min()), (x.latitude.max(), x.longitude.max())
+        #     ).nm
+        # ).to_frame("distance")
+
+        # # Set the areas
+        # virtual_transect_data.loc[:, "area"] = np.where(
+        #     virtual_transect_data.index.isin([
+        #         data_df.transect_num.min(), data_df.transect_num.max()
+        #     ]),
+        #     virtual_transect_data["distance"] * np.diff(
+        #         unique_latitude_transect_key["latitude"]
+        #     ).mean() * 60,
+        #     virtual_transect_data["distance"] * np.diff(
+        #         unique_latitude_transect_key["latitude"]
+        #     ).mean() * 60 / 2
+        # )
+
+        # # Flip the latitude key
+        # unique_latitude_transect_key.set_index("transect_num", inplace=True)
+
+        # # Set the latitude
+        # virtual_transect_data.loc[:, "latitude"] = unique_latitude_transect_key["latitude"]
+
+        # # Stratify the virtual transects
+        # virtual_transect_data = load_data.join_geostrata_by_latitude(
+        #     virtual_transect_data, 
+        #     geostrata_df, 
+        #     stratum_name=stratify_by[0]
+        # )
+
+        # # Sum the biological variable
+        # virtual_transect_data[variable] = virtual_df.groupby(["transect_num"])[variable].sum()
+
+        # # Return the DataFrame
+        # return virtual_transect_data
+
+    def _prepare_bootstrap_arrays(
+        self,
+        data_df: pd.DataFrame,
+        stratum_index: pd.DataFrame,
+        num_transects_to_sample: pd.DataFrame,
+        variable: str,
+    ) -> Tuple[awk.Array, awk.Array, awk.Array]:
+
+        # For each stratum, generate replicate samples of transect indices
+        transect_samples = [
+            np.sort(
+                np.array([
+                    self.rng.choice(stratum_index.loc[j, "transect_num"].values, 
+                            size=num_transects_to_sample.loc[j], replace=False)
+                    for _ in range(self.model_params["num_replicates"])
+                ])
+            )
+            for j in num_transects_to_sample.index
+        ]
+
+        # Use advanced indexing to get the sampled values
+        # ---- Distances
+        sampled_distances = awk.Array([
+            [data_df.loc[replicate, "distance"].to_numpy() for replicate in stratum]
+            for stratum in transect_samples
+        ])
+        # ---- Areas
+        sampled_areas = awk.Array([
+            [data_df.loc[replicate, "area"].to_numpy() for replicate in stratum]
+            for stratum in transect_samples
+        ])
+        # ---- Variable
+        sampled_values = awk.Array([
+            [data_df.loc[replicate, variable].to_numpy() for replicate in stratum]
+            for stratum in transect_samples
+        ])
+
+        # Return a tuple of the uneven arrays
+        return sampled_distances, sampled_areas, sampled_values     
+
+    @staticmethod
+    def _get_variance(
+        values: awk.Array,
+        value_mean: awk.array,
+        distance: awk.Array,
+        weights: awk.Array,
+        dof: np.array,
+    ) -> awk.Array:
+
+        # Adjust the values based on distance
+        values_adjusted = values / distance
+
+        # Calculate the squared deviation
+        squared_deviation = (values_adjusted - value_mean[..., None]) ** 2
+
+        # Sum the weighted squared deviations
+        squared_deviation_wgt = awk.sum(weights**2 * squared_deviation, axis=-1)
+
+        # Return the variance
+        return squared_deviation_wgt / awk.Array(dof.values)[:, None]
 
 
-# Convert to DataFrame(s) to pivot table(s)
-proportions_grouped_pvt = {
-    k: (
-        df
-        if utils.is_pivot_table(df)
-        else utils.create_pivot_table(
-            df,
-            index_cols=proportions_group_columns[k],
-            strat_cols=stratify_by,
-            value_col="proportion",
+    def stratified_bootstrap(
+        self,
+        data_df: pd.DataFrame,
+        stratify_by: List[str],
+        variable: str,
+    ):
+
+        # Get the model parameters
+        mp = self.model_params
+
+        # Enumerate the number of transects per stratum
+        strata_transect_counts = data_df.groupby(stratify_by, observed=False)["distance"].count()
+
+        # Calculate the total transect area per stratum
+        strata_transect_areas = data_df.groupby(stratify_by, observed=False)["area"].sum()
+
+        # Index by stratum
+        stratum_index = data_df[stratify_by].reset_index().set_index(stratify_by)
+
+        # Calculate the number of transects per stratum
+        num_transects_to_sample = np.round(
+            strata_transect_counts * mp["strata_transect_proportion"]
+        ).astype(int)
+
+        # Offset term used for later variance calculation
+        sample_offset = np.where(num_transects_to_sample == 1, 0, 1)
+
+        # Calculate effective sample size/degrees of freedom for variance calculation
+        sample_dof = num_transects_to_sample * (num_transects_to_sample - sample_offset)
+
+        # Compute the resampling arrays
+        sampled_distances, sampled_areas, sampled_values = self._prepare_bootstrap_arrays(
+            data_df, stratum_index, num_transects_to_sample, variable
         )
-    )
-    for k, df in proportions.items()
-}
 
-# Distribute the variable over each table
-apportioned_grouped_pvt = {
-    k: df.mul(dataset_pvt[variable]).fillna(0.0) for k, df in proportions_grouped_pvt.items()
-}
+        # Compute the stratified weights
+        stratified_weights = sampled_distances / awk.mean(sampled_distances, axis=-1, keepdims=True)
 
-# Re-pivot
+        # Compute the value mean
+        self.value_mean_array = awk.sum(
+            sampled_values * sampled_distances, axis=-1
+        ) / awk.sum(sampled_distances, axis=-1)
 
+        # Calculate the variance
+        variance = self._get_variance(
+            sampled_values, self.value_mean_array, sampled_distances, stratified_weights, sample_dof
+        )
 
-TEST = aged_apportioned_biomass.pivot_table(index=["sex", "length_bin"], columns=["age_bin", "stratum_num"], values="biomass_aged", observed=False)
-TEST.loc["all"].sum(axis=0).unstack("stratum_num").sum()
-TOIT = apportioned_grouped_pvt["aged"].stack("stratum_ks").to_frame("value").reset_index().pivot_table(index=["sex", "length_bin"], 
-                                                                                                       columns=["age_bin", "stratum_ks"], 
-                                                                                                       values="value", 
-                                                                                                       observed=False)
+        # Convert and transpose all arrays in one step
+        length_arr_np, mean_arr_np, area_arr_np, total_arr_np, variance_arr_np = [
+            awk.to_numpy(arr).T
+            for arr in [length_arr, mean_arr, area_arr, total_arr, variance_arr]
+        ]
 
-TOIT_ALL = TOIT.loc["male"].sum(axis=0).unstack("stratum_ks").sum() + TOIT.loc["female"].sum(axis=0).unstack("stratum_ks").sum()
-TOIT_ALL.sum()
+        # ---- By stratum (density)
+        unweighted_stratum_density = mean_arr_np / length_arr_np
 
-TEST.loc["all"].sum(axis=0).unstack("stratum_num").sum()
-proportions_grouped_pvt["aged"]
+        # ---- By stratum (total)
+        unweighted_stratum_total = unweighted_stratum_density * strata_transect_areas.to_numpy()
 
-apportioned_grouped_pvt["aged"].unstack(["age_bin"]).sum().sum() / dataset_pvt.sum()
-aged_weight_proportions_all.groupby(["stratum_num"])["weight_proportions"].sum()
+        # ---- By survey (total)
+        unweighted_survey_total = unweighted_stratum_total.sum(axis=1)
 
+        # ---- By survey (density)
+        unweighted_survey_density = unweighted_survey_total / strata_transect_areas.sum()
 
-nasc_biomass.loc[nasc_biomass.sex == "all", "biomass"].sum()
-aged_apportioned_biomass_tbl.sum(axis=1).loc["all"].sum()
+        # ---- Proportional stratum distributions
+        unweighted_stratum_proportions = total_arr_np / total_arr_np.sum(axis=1, keepdims=True)
 
-
-aged_apportioned_biomass_tbl.sum(axis=1).loc["male"] - apportioned_grouped_pvt["aged"].unstack(["age_bin"]).sum(axis=1).loc[:, "male"]
-# ==================================================================================================
-# Get proportions for each stratum specific to age-1
-# --------------------------------------------------
-
-# Age-1 NASC proportions
-age1_nasc_proportions = get_proportions.get_nasc_proportions_slice(
-    number_proportions=dict_df_number_proportion["aged"],
-    stratify_by=["stratum_ks"],
-    ts_length_regression_parameters={"slope": 20., 
-                                     "intercept": -68.},
-    include_filter = {"age_bin": [1]}
-)
-
-# Age-1 number proportions
-age1_number_proportions = get_proportions.get_number_proportions_slice(
-    number_proportions=dict_df_number_proportion["aged"],
-    stratify_by=["stratum_ks"],
-    include_filter = {"age_bin": [1]}
-)
-
-# Age-1 weight proportions
-age1_weight_proportions = get_proportions.get_weight_proportions_slice(
-    weight_proportions=dict_df_weight_proportion["aged"],
-    stratify_by=["stratum_ks"],
-    include_filter={"age_bin": [1]},
-    number_proportions=dict_df_number_proportion,
-    length_threshold_min=10.0,
-    weight_proportion_threshold=1e-10
-)
-
-survey.transect_analysis(exclude_age1=False)
-survey.kriging_analysis()
-self = survey
-analysis_dict, kriged_mesh, settings_dict = self.analysis, self.results["kriging"]["mesh_results_df"], self.analysis["settings"]["kriging"]
-
-table, settings_dict, variable = kriged_full_table, settings_dict, "biomass_apportioned"
-
-###
-apportion.combine_population_tables = combine_population_tables
-utils.apply_filters = apply_filters
-apportion.redistribute_population_table = redistribute_population_table
-
-###
-from echopop.nwfsc_feat import utils
-
-population_table = df_kriged_biomass_table.copy()
-exclusion_filter = {"age_bin": 1}
-group_by = ["sex"]
-redistribute = True
-###
-
-# Find any columns that are not in the group_by list
-# ---- Get column names
-column_names = population_table.columns.names
-# ---- Identify extra columns that are not in the group_by list
-extra_columns = [col for col in column_names if col not in group_by]
-# ---- Stack the population table
-stacked_table = population_table.stack(extra_columns, future_stack=True)
-
-# Apply inverse of exclusion filter to get the values being excluded
-excluded_grouped_table = utils.apply_filters(stacked_table, 
-                                             include_filter=exclusion_filter)
-
-# Replace the excluded values in the full table with 0.
-filtered_grouped_table = utils.apply_filters(stacked_table, 
-                                             exclude_filter=exclusion_filter,
-                                             replace_value=0.)
-# filtered_grouped_table1 = filtered_grouped_table.copy()
-
-# Get the sums for each group across the excluded and filtered tables
-# ---- Excluded
-excluded_grouped_sum = excluded_grouped_table.sum()
-# ---- Filtered/included
-filtered_grouped_sum = filtered_grouped_table.sum()
-
-# Get the redistributed values that will be added to the filtered table values
-adjustment_table = filtered_grouped_table * excluded_grouped_sum / filtered_grouped_sum
-
-# Add the adjustments to the filtered table
-filtered_grouped_table += adjustment_table
-
-# Check 
-if np.any(filtered_grouped_table.sum() - stacked_table.sum() > 1e-6):
-    # ---- If the sums do not match, raise a warning
-    check_sums = filtered_grouped_table.sum() - stacked_table.sum() > 1e-6
-    # ---- Raise a warning with the indices where the sums do not match
-    warnings.warn(
-        f"The sums of the table with the redistributed estimates do not match the original table "
-        f"filtered table do not match the original table for indices: "
-        f"{', '.join(check_sums[check_sums].index.tolist())}"
-    )
-
-# Restore the original column structure
-redistributed_table = (
-    filtered_grouped_table.unstack(extra_columns)
-    .reorder_levels(column_names, axis=1)
-)
+        # ---- Transect-length weighted coefficient of variation (CV)
+        weighted_variance = (variance_arr_np * strata_transect_areas.to_numpy()**2).sum(axis=1)
 
 
+        # Sum the quantities over each stratum
+        # ---- Transect lengths
+        distance_totals = awk.sum(sampled_distances, axis=-1)
+        # ---- Areas
+        area_totals = awk.sum(sampled_areas, axis=-1)
+        # ---- Biological variable
+        variable_totals = awk.sum(sampled_values, axis=-1)
 
-df = stacked_table.copy()
-exclude_filter=exclusion_filter
-include=False
-replace_value=0.
-filter_dict = exclude_filter
 
-TEST = filtered_grouped_table - filtered_grouped_table1
-TEST["female"].loc[lambda x: x != 0.]
+        
 
-stacked_table.sum() - filtered_grouped_table.sum()
+        # Output the related summary statistics
+        # ---- Save the output resampled distributions
+        resampled_distributions = pd.DataFrame(
+            {
+                "realization": np.arange(1, transect_replicates + 1),
+                "unweighted_survey_density": unweighted_survey_density,
+                "unweighted_survey_total": unweighted_survey_total,
+                "weighted_survey_total": weighted_mean,
+                "weighted_survey_variance": weighted_variance,
+                "survey_cv": bootstrap_cv,
+            }
+        )
 
-excluded_table
-df = stacked_table.copy()
-filter_dict = exclusion_filter
-include=False
-excluded_table
+        # Sum the quantities over each stratum
+        # ---- Transect lengths
+        distance_totals = awk.sum(sampled_distances, axis=-1)
+        # ---- Areas
+        area_totals = awk.sum(sampled_areas, axis=-1)
+        # ---- Biological variable
+        variable_totals = awk.sum(sampled_values, axis=-1)
 
-df = population_table.copy()
-exclude_filter=exclusion_filter
-include_filter: Optional[Dict[str, Any]] = None
-# Apply the inverse of exclusion filter
-
-filter_dict = exclude_filter
-filter_dict = {"length_bin": [27., 28., 29.]}
-
-replace_value = 0.
-
-kriged_full_table.pivot_table(
-    index=["length_bin"],
-    columns=["age_bin", "sex"],
-    values="biomass_apportioned",
-)
-
-standardized_table_sub.loc[5, "male"]
-unaged_apportioned_biomass_values.loc[5]
-
-kriged_full_table.set_index(["sex", "length_bin"]).loc["male", 5]
-standardized_proportions[name].loc[:, "male"].loc[:, 1]
-standardized_table_sub.loc[:, "male"].loc[:, 1]
-unaged_apportioned_biomass_values.loc[:, 1]
-unaged_apportioned_table.loc[:, 1]
-unaged_apportioned_table.loc[6]
-(standardized_table[name] - standardized_table_sub).min(axis=1)
-standardized_table[name]
-standardized_table["unaged"].stack(standardized_table["unaged"].columns.names, future_stack=True)
-standardized_table_sub.loc[nonzero_reference_to_table_indices[name][col], col]
+        

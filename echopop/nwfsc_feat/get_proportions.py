@@ -7,7 +7,9 @@ import pandas as pd
 
 from . import utils
 
-
+# !!! ===========================================================================
+# TODO: Exclude `exclude_filters`
+# TODO: Remove the tests that apply for this argument
 def compute_binned_counts(
     data: pd.DataFrame,
     groupby_cols: List[str],
@@ -60,7 +62,8 @@ def compute_binned_counts(
             .reset_index()
         )
 
-
+# !!! =======================================================================================
+# TODO: Make `exclude_filters` as a nested dictionary for each column alias
 def number_proportions(
     data: Union[Dict[str, pd.DataFrame], pd.DataFrame],
     group_columns: List[str] = ["stratum_num"],
@@ -319,7 +322,9 @@ def apply_weight_interpolation(
 
     return result_df
 
-
+# !!! ====================================================================================
+# TODO: `interpolate` -> use_interpolated_regression or something thereabouts
+# TODO: docstring for `interpolate` (w/ new name) needs another sentence or two re: implementation
 def binned_weights(
     length_dataset: pd.DataFrame,
     interpolate: bool = True,
@@ -927,7 +932,8 @@ def aggregate_stratum_weights(input_data, stratum_col="stratum_num"):
 
     return final_df
 
-
+# !!! =============================================================================
+# TODO: change from `standardize` to `scale`
 def standardize_weights_by_stratum(
     weights_df: Union[pd.Series, pd.DataFrame],
     reference_weights_df: pd.DataFrame,
@@ -1069,7 +1075,8 @@ def weight_proportions(
     # Compute the weight proportions relative to the global stratified total weights
     return data_pvt / total_stratum_weights
 
-
+# !!! =============================================================================
+# TODO: change from `standardize` to `scale`
 def standardize_weight_proportions(
     weight_data: pd.DataFrame,
     reference_weight_proportions: pd.DataFrame,
