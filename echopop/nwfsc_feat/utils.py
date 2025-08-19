@@ -656,6 +656,7 @@ def quantize_length_data(df, group_columns: List[str]):
     # Aggregate and return
     return df.groupby(group_columns + ["length"]).agg(length_count=(sum_var_column, var_operation))
 
+
 def is_pivot_table(df: pd.DataFrame):
 
     # Check for a MultiIndex
@@ -675,6 +676,8 @@ def is_pivot_table(df: pd.DataFrame):
         return True
     else:
         return False
+
+
 ####################################################################################################
 # Validators
 class InputModel(BaseModel):
