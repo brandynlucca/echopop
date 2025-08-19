@@ -340,6 +340,7 @@ def apply_filters(
     # Return masked DataFrame
     return result
 
+
 def is_df_wide(df):
     """Check if DataFrame is in wide format using pandas structural information."""
     # Wide format indicators:
@@ -717,12 +718,15 @@ class TSLRegressionParameters(InputModel, title="TS-length regression parameters
 
     slope: float = Field(allow_inf_nan=False)
     intercept: float = Field(allow_inf_nan=False)
+
+
 from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 from scipy import interpolate as interp
+
 
 def roundn(n):
     """
