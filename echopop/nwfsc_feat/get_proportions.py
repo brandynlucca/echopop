@@ -7,6 +7,7 @@ import pandas as pd
 
 from . import utils
 
+
 # !!! ===========================================================================
 # TODO: Exclude `exclude_filters`
 # TODO: Remove the tests that apply for this argument
@@ -61,6 +62,7 @@ def compute_binned_counts(
             .to_frame("count")
             .reset_index()
         )
+
 
 # !!! =======================================================================================
 # TODO: Make `exclude_filters` as a nested dictionary for each column alias
@@ -321,6 +323,7 @@ def apply_weight_interpolation(
         result_df[dependent_var] *= result_df[count_col]
 
     return result_df
+
 
 # !!! ====================================================================================
 # TODO: `interpolate` -> use_interpolated_regression or something thereabouts
@@ -932,6 +935,7 @@ def aggregate_stratum_weights(input_data, stratum_col="stratum_num"):
 
     return final_df
 
+
 # !!! =============================================================================
 # TODO: change from `standardize` to `scale`
 def standardize_weights_by_stratum(
@@ -1074,6 +1078,7 @@ def weight_proportions(
 
     # Compute the weight proportions relative to the global stratified total weights
     return data_pvt / total_stratum_weights
+
 
 # !!! =============================================================================
 # TODO: change from `standardize` to `scale`
