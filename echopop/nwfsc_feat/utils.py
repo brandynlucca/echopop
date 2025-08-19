@@ -722,6 +722,7 @@ class TSLRegressionParameters(InputModel, title="TS-length regression parameters
     slope: float = Field(allow_inf_nan=False)
     intercept: float = Field(allow_inf_nan=False)
 
+
 def roundn(n):
     """
     Rounding function to avoid bankers rounding
