@@ -19,6 +19,7 @@ from echopop.nwfsc_feat import (
     load_data, 
     mesh,
     spatial,
+    stratified,
     transect, 
     utils
 )
@@ -306,10 +307,16 @@ df_mesh = load_data.load_mesh_data(
 df_nasc_all_ages = load_data.join_geostrata_by_latitude(df_nasc_all_ages, 
                                                         df_dict_geostrata["inpfc"],
                                                         stratum_name="geostratum_inpfc")
+df_nasc_no_age1 = load_data.join_geostrata_by_latitude(df_nasc_no_age1, 
+                                                       df_dict_geostrata["inpfc"],
+                                                       stratum_name="geostratum_inpfc")
 # KS (from geostrata)
 df_nasc_all_ages = load_data.join_geostrata_by_latitude(df_nasc_all_ages, 
                                                         df_dict_geostrata["ks"],
                                                         stratum_name="geostratum_ks")
+df_nasc_no_age1 = load_data.join_geostrata_by_latitude(df_nasc_no_age1, 
+                                                       df_dict_geostrata["ks"],
+                                                       stratum_name="geostratum_ks")
 
 # MESH
 # ---- DataFrame merged with geographically distributed stratum number (KS or INPFC)
@@ -741,9 +748,9 @@ geo.crop_mesh(
 # ==================================================================================================
 # [OPTIONAL] Mesh cropping using the hull convex
 # ----------------------------------------------
-GEO_CACHE = copy.deepcopy(geo)
+GEO_COPY = copy.deepcopy(geo)
 
-GEO_CACHE.crop_mesh(
+GEO_COPY.crop_mesh(
     crop_function=mesh.hull_crop,
     num_nearest_transects=3,
     mesh_buffer_distance=2.5,
@@ -872,7 +879,7 @@ df_kriged_abundance_table_noage1 = apportion.redistribute_population_table(
     group_by=["sex"],
 )
 
-# ##################################################################################################
+####################################################################################################
 # Redistribute the kriged biomass estimates
 # -----------------------------------------
 
@@ -881,4 +888,62 @@ df_kriged_biomass_table_noage1 = apportion.redistribute_population_table(
     population_table=df_kriged_biomass_table,
     exclusion_filter={"age_bin": [1]},
     group_by=["sex"],
+)
+
+# ##################################################################################################
+# Instantiate stratified analysis
+# -------------------------------
+# Model parameters for stratified analysis initialization
+JOLLYHAMPTON_PARAMETERS = {
+    "transects_per_latitude": 5,
+    "strata_transect_proportion": 0.75,
+    "num_replicates": 1000,
+}
+
+jh = stratified.JollyHampton(JOLLYHAMPTON_PARAMETERS)
+
+# ##################################################################################################
+# Compute coefficient of variation (CV) and other estimators for transect biomass
+# -------------------------------------------------------------------------------
+
+# Run bootstrapping procedure
+jh.stratified_bootstrap(data_df=df_nasc_no_age1, 
+                        stratify_by=["geostratum_inpfc"], 
+                        variable="biomass")
+
+# Compute summary statistics for each stratum and overall survey
+transect_results = jh.summarize(ci_percentile=0.95, ci_method="t-jackknife")
+print(transect_results)
+
+# ##################################################################################################
+# Create virtual transects for the gridded kriged biomass results
+# ---------------------------------------------------------------
+
+kriged_transects = jh.create_virtual_transects(
+    data_df=df_kriged_results,
+    geostrata_df=df_dict_geostrata["inpfc"], 
+    stratify_by=["geostratum_inpfc"],
+    variable="biomass",
+)
+
+# ##################################################################################################
+# Compute CV and other estimators for kriged biomass
+# --------------------------------------------------
+
+# Run bootstrapping procedure
+jh.stratified_bootstrap(data_df=kriged_transects, 
+                        stratify_by=["geostratum_inpfc"], 
+                        variable="biomass")
+
+# Compute summary statistics for each stratum and overall survey
+kriged_results = jh.summarize(ci_percentile=0.95, ci_method="t-jackknife")
+print(kriged_results)
+
+# ##################################################################################################
+# Compare transect and kriged outputs
+# -----------------------------------
+
+print(
+    kriged_results.xs("mean", axis=1, level="metric") - 
+    transect_results.xs("mean", axis=1, level="metric")
 )
