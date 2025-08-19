@@ -774,6 +774,7 @@ def is_pivot_table(df: pd.DataFrame):
     else:
         return False
 
+
 def roundn(n):
     """
     Rounding function to avoid bankers rounding
