@@ -5,6 +5,7 @@ numpy
 openpyxl
 pandas
 scipy
+xarray
 # Spatial data processing stack
 cartopy
 geopandas
