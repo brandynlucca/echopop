@@ -448,7 +448,7 @@ dict_df_number_proportion: Dict[str, pd.DataFrame] = get_proportions.number_prop
     data=dict_df_counts, 
     group_columns=["stratum_ks"],
     column_aliases=["aged", "unaged"],
-    exclude_filters=[{"sex": "unsexed"}, None] 
+    exclude_filters={"aged": {"sex": "unsexed"}}
 )
 
 # ==================================================================================================
@@ -461,7 +461,7 @@ dict_df_weight_distr: Dict[str, Any] = {}
 dict_df_weight_distr["aged"] = get_proportions.binned_weights(
     length_dataset=dict_df_bio["specimen"],
     include_filter = {"sex": ["female", "male"]},
-    interpolate=False,
+    interpolate_regression=False,
     contrast_vars="sex",
     table_cols=["stratum_ks", "sex", "age_bin"]
 )
@@ -471,7 +471,7 @@ dict_df_weight_distr["unaged"] = get_proportions.binned_weights(
     length_dataset=dict_df_bio["length"],
     length_weight_dataset=binned_weight_table,
     include_filter = {"sex": ["female", "male"]},
-    interpolate=True,
+    interpolate_regression=True,
     contrast_vars="sex",
     table_cols=["stratum_ks", "sex"]
 )
@@ -532,7 +532,7 @@ dict_df_weight_proportion["unaged"] = get_proportions.scale_weight_proportions(
 # ==================================================================================================
 # Initialize the Inversion class
 # ------------------------------
-model_parameters = {
+MODEL_PARAMETERS = {
     "ts_length_regression": {
         "slope": 20.,
         "intercept": -68.
@@ -586,66 +586,11 @@ df_nasc_no_age1["area_interval"] = (
 )
 
 # ==================================================================================================
-# Calculate remaining population metrics across all animals 
-# ---------------------------------------------------------
-biology.set_population_metrics(df_nasc=df_nasc_all_ages, 
-                               metrics=["abundance", "biomass", "biomass_density"],
-                               stratify_by="stratum_ks",
-                               df_average_weight=df_averaged_weight["all"])
-
-biology.set_population_metrics(df_nasc=df_nasc_no_age1, 
-                               metrics=["abundance", "biomass", "biomass_density"],
-                               stratify_by="stratum_ks",
-                               df_average_weight=df_averaged_weight["all"])
-
-# ==================================================================================================
-# Apportion age-1 vs age-2+ population estimates 
-# ----------------------------------------------
-# TODO: This apportionment step is required for kriging
-
-# This step is used in EchoPro
-# Otherwise, the mean `sigma_bs` can be computed directly from the data (as shown below), although 
-# computing the mean average sigma_bs per haul better accounts for pseudoreplication 
-invert_hake.set_haul_sigma_bs(df_length=[dict_df_bio["length"], dict_df_bio["specimen"]])
-# ---- This DataFrame can be inspected at:
-invert_hake.sigma_bs_haul
-
-# ==================================================================================================
-# Invert number density
-# ---------------------
-
-# If the above haul-averaged `sigma_bs` values were calculated, then the inversion can can 
-# completed without calling in additional biodata
-df_nasc_all_ages = invert_hake.invert(df_nasc=df_nasc_all_ages)
-df_nasc_no_age1 = invert_hake.invert(df_nasc=df_nasc_no_age1)
-# ---- The average `sigma_bs` for each stratum can be inspected at:
-invert_hake.sigma_bs_strata
-
-# ==================================================================================================
-# Set transect interval distances
-# -------------------------------
-
-# Calculate along-transect interval distances which is required for getting the area-per-interval 
-# and therefore going from number density to abundance
-transect.set_interval_distance(df_nasc=df_nasc_all_ages, interval_threshold=0.05)
-transect.set_interval_distance(df_nasc=df_nasc_no_age1, interval_threshold=0.05)
-
-# ==================================================================================================
-# Calculate transect interval areas
-# ---------------------------------
-df_nasc_all_ages["area_interval"] = (
-    df_nasc_all_ages["transect_spacing"] * df_nasc_all_ages["distance_interval"]
-)
-df_nasc_no_age1["area_interval"] = (
-    df_nasc_no_age1["transect_spacing"] * df_nasc_no_age1["distance_interval"]
-)
-
-# ==================================================================================================
 # Calculate (and apportion) number densities to abundance, and number densities/abundance for each 
 # sex 
 # --------------------------------------------------------------------------------------------------
 
-biology.set_abundance(
+biology.compute_abundance(
     dataset=df_nasc_no_age1,
     stratify_by=["stratum_ks"],
     group_by=["sex"],
@@ -658,7 +603,7 @@ biology.set_abundance(
 # respectively) for the overall transect dataset as well as for each sex
 # --------------------------------------------------------------------------------------------------
 
-biology.set_biomass(
+biology.compute_biomass(
     dataset=df_nasc_no_age1,
     stratify_by=["stratum_ks"],
     group_by=["sex"],
