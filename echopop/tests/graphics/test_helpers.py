@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import pytest
 import pyproj
 import geopandas as gpd
 import xarray as xr

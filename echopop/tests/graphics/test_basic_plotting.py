@@ -1,5 +1,3 @@
-import numpy as np
-import pandas as pd
 import pytest
 import matplotlib
 from echopop.nwfsc_feat import graphics as egra

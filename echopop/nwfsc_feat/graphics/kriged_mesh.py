@@ -284,7 +284,7 @@ def plot_kriged_mesh(
     figsize = plot_kwargs.pop("figsize", gutils.apply_aspect_ratio(5.5, x0, x1, y0, y1))
 
     # Initialize figure
-    fig = gutils.call_with_pruned(plt.figure, {"figsize": figsize, **plot_kwargs})
+    gutils.call_with_pruned(plt.figure, {"figsize": figsize, **plot_kwargs})
 
     # Initialize axes
     ax = gutils.call_with_pruned(plt.axes, {"extent": [x0, x1, y0, y1], **axis_kwargs})

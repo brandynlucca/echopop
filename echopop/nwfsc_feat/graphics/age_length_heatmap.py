@@ -236,8 +236,8 @@ def plot_age_length_heatmap(
     # Column check
     if "age_bin" not in data.columns.names:
         raise KeyError(
-            f"The input DataFrame is expected to be have the column 'age_bin'. The DataFrame has the "
-            f"current column(s): {', '.join(data.columns.names)}."
+            f"The input DataFrame is expected to be have the column 'age_bin'. The DataFrame has "
+            f"the current column(s): {', '.join(data.columns.names)}."
         ) from None
 
     # Filter the dataset

@@ -208,7 +208,7 @@ def plot_transect_map(
     lines_gdf = get_transect_lines(data)
 
     # Initialize figure
-    fig = gutils.call_with_pruned(plt.figure, {"figsize": figsize, **plot_kwargs})
+    gutils.call_with_pruned(plt.figure, {"figsize": figsize, **plot_kwargs})
 
     # Initialize axes
     ax = gutils.call_with_pruned(plt.axes, {"extent": [x0, x1, y0, y1], **axis_kwargs})
