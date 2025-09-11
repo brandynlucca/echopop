@@ -156,6 +156,7 @@ def test_compute_biomass_with_weights(biology_test_dataset, average_weight_df):
         ]
     )
 
+
 def test_matrix_multiply_grouped_table(biology_test_dataset, average_weight_df):
     """Test matrix multiplication with grouped table."""
     test_data = biology_test_dataset.copy()
