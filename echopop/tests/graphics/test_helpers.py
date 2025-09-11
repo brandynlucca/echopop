@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pyproj
-import pytest
 import xarray as xr
 
 from echopop.nwfsc_feat.graphics.age_length_heatmap import add_heatmap_grid, format_heatmap_mapping
