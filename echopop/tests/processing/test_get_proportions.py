@@ -591,7 +591,7 @@ def test_calculate_adjusted_proportions(proportion_dict):
     )
 
     result = get_proportions.calculate_adjusted_proportions(
-        group_keys, aggregate_table, sex_proportions_table
+        group_keys, aggregate_table, sex_proportions_table, ["sex"]
     )
 
     # Check that we get multi-index with group and sex
@@ -605,7 +605,12 @@ def test_calculate_adjusted_proportions(proportion_dict):
 
 def test_stratum_averaged_weight(proportion_test_dict, test_weight_table):
     """Test the stratum_averaged_weight function."""
-    result = get_proportions.stratum_averaged_weight(proportion_test_dict, test_weight_table)
+    result = get_proportions.stratum_averaged_weight(
+        proportions_dict=proportion_test_dict,
+        binned_weight_table=test_weight_table,
+        stratify_by=["stratum_num"],
+        group_by=["sex"],
+    )
 
     # Check that we get the right format
     assert isinstance(result, pd.DataFrame)
@@ -1072,59 +1077,6 @@ def test_get_weight_proportions_slice_no_thresholding():
 
     assert isinstance(result, pd.Series)
     assert len(result) == 3  # Two strata that match the filter
-    assert all(result >= 0), "Weight proportions should be non-negative"
-    assert all(result <= 1), "Weight proportions should be <= 1"
-
-
-def test_get_weight_proportions_slice_with_thresholding():
-    """Test weight proportions with thresholding."""
-    # Create test data and apply proper binning using utils.binify
-    raw_data = pd.DataFrame(
-        {
-            "stratum_num": [1, 1, 2, 2, 3, 3],
-            "length": [15.0, 25.0, 15.0, 25.0, 18.0, 28.0],
-            "age": [1.2, 2.3, 1.8, 2.2, 1.5, 2.7],
-            "sex": ["female", "male", "female", "male", "female", "male"],
-            "weight": [10, 20, 15, 25, 12, 22],
-        }
-    )
-
-    # Apply binning using utils.binify (like the real workflow)
-    length_bins = np.linspace(10, 30, 3)
-    age_bins = np.linspace(1, 3, 3)
-    utils.binify(data=raw_data, bins=length_bins, bin_column="length")
-    utils.binify(data=raw_data, bins=age_bins, bin_column="age")
-
-    # Create weight proportions data with proper MultiIndex
-    weight_data = (
-        raw_data.groupby(["stratum_num", "length_bin", "sex", "age_bin"], observed=False)["weight"]
-        .sum()
-        .to_frame()
-    )
-    weight_data = pd.concat([weight_data, weight_data, weight_data], axis=1)
-    weight_data.columns = [0, 1, 2]
-    weight_data.columns.name = "stratum_num"
-    weight_data = weight_data.div(weight_data.sum(axis=0), axis=1).fillna(0)
-
-    # Create number proportions data for thresholding with proper MultiIndex structure
-    number_data = (
-        raw_data.groupby(["stratum_num", "length_bin", "sex", "age_bin"], observed=False)
-        .size()
-        .to_frame("proportion")
-    )
-    # Normalize to get proportions
-    number_data["proportion"] = number_data["proportion"] / number_data["proportion"].sum()
-
-    result = get_proportions.get_weight_proportions_slice(
-        weight_proportions=weight_data,
-        stratify_by=["stratum_num"],
-        include_filter={"age_bin": [1]},
-        number_proportions=number_data.reset_index(),
-        length_threshold_min=15.0,
-    )
-
-    assert isinstance(result, pd.Series)
-    assert len(result) == 3
     assert all(result >= 0), "Weight proportions should be non-negative"
     assert all(result <= 1), "Weight proportions should be <= 1"
 

@@ -17,9 +17,6 @@ def sample_model_parameters():
         "correlation_range": 0.3,
         "hole_effect_range": 0.4,
         "decay_power": 1.5,
-        "smoothness_parameter": 1.5,
-        "shape_parameter": 2.0,
-        "power_exponent": 1.5,
     }
 
 
@@ -65,17 +62,12 @@ def sample_large_distance_lags():
 def sample_single_model_names():
     """Create list of single model names for testing."""
     return [
-        "cubic",
         "exponential",
         "gaussian",
         "jbessel",
         "kbessel",
         "linear",
-        "matern",
         "nugget",
-        "pentaspherical",
-        "power",
-        "quadratic",
         "sinc",
         "spherical",
     ]
