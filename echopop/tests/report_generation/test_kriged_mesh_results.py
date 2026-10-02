@@ -96,9 +96,7 @@ def test_kriged_aged_biomass_mesh_identifiers(tmp_path, include_et_id, nonzero_o
         dims=["length_bin", "age_bin", "sex", "bio_stratum"],
         coords={
             "length_bin": pd.IntervalIndex.from_tuples([(10.0, 20.0)]),
-            "age_bin": pd.CategoricalIndex(
-                pd.IntervalIndex.from_tuples([(0.5, 1.5), (1.5, 2.5)])
-            ),
+            "age_bin": pd.CategoricalIndex(pd.IntervalIndex.from_tuples([(0.5, 1.5), (1.5, 2.5)])),
             "sex": ["male", "female"],
             "bio_stratum": [10, 20],
         },
